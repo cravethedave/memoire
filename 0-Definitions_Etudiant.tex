@@ -1,0 +1,31 @@
+%% -----------------------------------
+%% ---> À MODIFIER PAR L'ETUDIANT / TO BE MODIFIED BY THE STUDENT <---
+%% -----------------------------------
+%%
+%% Commandes qui affichent le titre du document, le nom de l'auteur, etc.
+% Commands that display the document title, the author's name, etc.
+\newcommand\monTitre{Titre de mon document / Title }
+\newcommand\monPrenom{David}
+\newcommand\monNom{Saikali}
+\newcommand\monDepartement{Génie informatique et génie logiciel}  % Department
+\newcommand\maDiscipline{Génie informatique}
+\newcommand\monDiplome{M}        % (M)aîtrise ou (D)octorat / (M)aster or Ph(D)
+\newcommand\anneeDepot{2025}    % Year
+\newcommand\moisDepot{Juillet}       % Month
+\newcommand\monSexe{M}           % "M" ou "F" = Gender
+\newcommand\PageGarde{Y}         % "O" ou "N" = Yes or No
+\newcommand\AnnexesPresentes{O}  % "O" ou "N". Indique si le document comprend des annexes. / If the thesis includes annexes = O; if it does not N = No.
+\newcommand\mesMotsClef{Liste,de,mot-clés,séparés,par,des,virgules}
+%%
+%%  DEFINITION DU / OF JURY
+%%
+%%  Pour la définition du jury, les macros suivantes sont definies: / For the definition of the jury, the following macros are defined:
+%%  \PresidentJury, \DirecteurRecherche, \CoDirecteurRecherche, \MembreJury, \MembreExterneJury
+%%
+%%  Toutes les macros prennent 3 paramètres: Sexe (M/F), Nom, Prénom
+%%  All the macros have 3 parameters: Gender (M/F), Last name, First name
+\newcommand\monJury{\PresidentJury{F}{Zouaq}{Amal}\\
+\DirecteurRecherche{M}{Pesant}{Gilles}\\
+% \CoDirecteurRecherche{F}{Couture}{Marie}\\
+\MembreJury{M}{Rousseau}{Louis-Martin}}
+% \MembreExterneJury{M}{Brown}{Joseph}}

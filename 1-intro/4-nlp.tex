@@ -1,0 +1,54 @@
+\documentclass[../Document.tex]{subfiles}
+\graphicspath{{\subfix{../images/}}}
+
+\begin{document}
+
+
+\section{\acrlongpl{nn} for \acrlong{nlp}}
+\label{sec:intro/nlp}
+
+This section will give simplified descriptions of different necessary notions for this work.
+
+
+%%% SubSection NN %%%
+\subsection{\acrlong{nn}}
+
+\acrlongpl{nn} are a \acrlong{ml} architecture that get their name from their resemblance to a brain. Similarly to a brain, a \gls{nn} has neurons that communicate with each other to learn how to solve the task at hand. The simplest network we can make is made up of one input layer and one output layer. To improve the learning capabilities of this model, we can add hidden layers, which are neuron layers between the input and output ones. A model which has more than 2 hidden layers is called a Deep Neural Network.
+
+The input layer contains as many nodes as the problem has inputs, each node representing one value. Similarly, the output layer contains as many nodes as the problem has.
+A model can contain any number of hidden layers, each of which is made up of any number of nodes. Each node in a hidden layer takes its inputs from every node in the previous layer and, inversely, sends its output to every node in the next layer.
+
+In a standard model, the node sums up the product of all the inputs and their associated weight before applying an activation function to the sum. This result is the node's output and will be passed on to the next layer where it will be used as the input in a similar operation.
+For the model to learn complex relations, it is critical that the activation function used is non-linear. If the activation function were linear, the entire model would collapse back into a simple linear equation.
+
+To find the right weights, the model must first be trained on a part of the total dataset. During training, the model computes the error between the expected result and the predicted one and then backpropagates this error from layer to layer. Each layer then recalculates the weights of its inputs based on the obtained error before sending a modified message to the previous layer.
+
+From there, the trained model can be given any problem input and will calculate the predicted output based on its internal weights.
+
+
+%%% SubSection Transformers %%%
+\subsection{Transformers}
+Transformers\cite{vaswani2017attention} are a \gls{ml} architecture based on encoders and decoders. The model first passes the input through an encoder, that encoded sequence is then used by the decoder to generate an output one token at a time.
+
+The encoder is made up of multiple identical layers, each composed of two sub-layers: a multi-head attention layer and a feed-forward network.
+The multi-head attention layer is an improvement over standard attention models and allows the model to learn more complex relations.
+The input embeddings received by the multi-head attention sub-layer maintain more context during training and generation by encoding both the input sequence as well as positional information.
+
+The decoder is also made up of multiple identical layers, each composed of three sub-layers: a masked multi-head attention layer, a standard multi-head attention layer and a feed-forward network.
+The masked multi-headed attention layer's output is then fed into the next multi-headed attention layer with the encoded input from the encoder. This is finally passed through a feed-forward network.
+The input received by the masked multi-headed attention is an embedding which encodes both the current output sequence as well as positional information on the tokens.
+
+Once this final output is calculated, we apply a softmax on it to get the probabilities for the next token.  
+
+
+%%% SubSection LLM %%%
+\subsection{\acrlong{llm}}
+\glspl{llm} were introduced shortly after the proposal of transformers in 2017. Following transformers, \gls{bert}~\cite{devlin2019bert} was introduced as an encoder-only architecture and can be considered the start of \glspl{llm}. However, this type of architecture came into the limelight with the \gls{gpt} models from OpenAI.
+
+The specific \gls{gpt} model that interests us is the \gls{gpt}-2 model~\cite{radford2019language}, it is what we use in our architecture. Similarly to what was introduced for \gls{gpt}-1~\cite{radford2018improving}, the model is a large decoder layer, as seen in the transformers.
+An important difference is that the second multi-head attention sub-layer is removed from each of the identical layers in the decoder.
+
+These models are usually trained to complete many different tasks, however by training one on a \gls{smiles} dataset, we can get a \gls{gpt}-2 model to generate molecules based on what it has seen.
+
+
+\end{document}

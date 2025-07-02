@@ -1,0 +1,6 @@
+{
+    "latex-workshop.synctex.afterBuild.enabled": false,
+    "latex-workshop.view.outline.sync.viewer": true,
+    "latex-workshop.view.pdf.internal.synctex.keybinding": "ctrl-click",
+    "explorer.excludeGitIgnore": true
+}

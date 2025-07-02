@@ -1,0 +1,83 @@
+\documentclass[../Document.tex]{subfiles}
+\graphicspath{{\subfix{../images/}}}
+
+\begin{document}
+
+
+\Chapter{MODELING VALID MOLECULES USING \acrshort{cp}}
+\label{chap:cp-validity}
+
+In this chapter, we will put forward a way to model that can represent valid molecules using \gls{cp}.
+As mentioned previously, we choose to use \gls{smiles} to encode our molecules. This is a simple and easy-to-read one-dimensional molecule representation which can easily be modelled by \gls{cp}.
+
+
+\section{\gls{smiles} Representation}
+\david{Should I justify the size of our molecules more? C'était relativement arbitraire comme décision, mais on l'a fait pour garder de la complexité et limiter le temps de recherche dans l'arbre. On avait fait des tests, mais je n'ai plus les valeurs (i don't think so at least)}
+We chose to limit the size of our molecules to 40 tokens. We made this decision to ensure the problem was difficult enough without making it too long to solve and get results.
+
+Each variable's initial domain contains the entire \gls{smiles} alphabet. This allows any combination of \gls{smiles} tokens including invalid combinations. To ensure validity, we use three constraints as described in the following subsections.
+
+
+\subsection{Grammar}
+In our work, we use a variation of Kraev's grammar \cite{kraev2018grammars} to ensure that atom valences are respected in the generated molecules. In \gls{smiles} notation, an ion  is written differently than an 
+
+Respecting atom valences
+
+increases the potential stability of the generated molecule. However, we cannot guarantee the stability of the molecule even if we do respect valence rules since it is much more complex.
+
+The original work uses masks in addition to this grammar to completely avoid invalid outputs.
+The first mask handles numerical assignment for cycles, guaranteeing that cycles are numbered correctly.
+The second mask avoids making cycles that are too small (\ie cycles of 2 atoms) and cycles that are too long. They limit their cycle length to 8 based on what they observe in their database~\cite{kraev2018grammars}.
+
+We address both of these issues by modifying the base grammar and adding new constraints as will be discussed later.
+
+
+\subsubsection{Chomsky Normal Form}
+The solver we use, miniCPBP \david{cite miniCPBP}, has an implementation of the grammar constraint that requires a grammar in Chomsky Normal Form.
+
+\david{Potentially insert what is in the intro here}
+
+We automated the process of converting the \gls{cfg} into the right form. This allows us to keep working on the more readable \gls{cfg} format.
+
+The original grammar from Kraev contained 34 terminals, 36 nonterminals and 138 productions. After conversion, the number of nonterminals and productions, respectively, increase to 169 and 411.
+
+
+\subsubsection{Padding}
+For the purpose of using this grammar in our \gls{cp} model, we add padding tokens that can complete the end of a molecule. 
+This will allow our model to generate any molecule up to the size instead of giving it a fixed length, allowing for a more versatile model.
+We chose ``\_'' as our padding token.
+
+An easy way to make this change is to create a new starting token that can be developed into the old start token and any number of padding tokens (including none). This change was not influential on the performance of the algorithm and allows for more options during generation.
+
+
+\subsubsection{Hydrogen tokens}
+\david{Section potentially useless, mais je voulais être explicit avec tous les changements qu'on a fait.}
+Some Hydrogen tokens can be included in the molecule. These can be followed by a number to indicate the number of Hydrogen atoms present. We change these tokens to directly include the number.
+Instead of needing two tokens (``H'' and ``3'') we now use one token (``H3'') made up of two characters.
+
+This avoids confusing Hydrogen count tokens for cycle tokens and improves our model's understanding of what it is generating.
+
+
+\subsubsection{Cycle-length limit}
+The final required modification we make to our grammar is to limit the cycle length. This guarantees that the cycle length remains in the desired range (between 3 and 8 inclusively) and that an opened cycle is necessarily closed. Unclosed cycles are syntactically invalid, but long cycles seem to be infrequent because of lower stability.
+MOSES~\cite{MOSES}, a data set of about two million molecules, never exceeds length-6 cycles while another, Zinc\_250k~\cite{Akhmetshin2021}, features some length-8 cycles. 
+
+We achieve this by limiting the number of tokens that a cycle production can be developed into. This information must be encoded in nonterminals where a larger cycle nonterminal can be rewritten as an atom and a smaller cycle nonterminal.
+
+This change alone guarantees that any nonterminal ``num'' will have another nonterminal ``num'' within an acceptable distance. However, this does not guarantee that the nonterminal ``num'' will be developped into the same cycle number. Take the unfinished chain ``C\textit{num}CCCCC\textit{num}NC\textit{num}CCCCC\textit{num}'' as an example. While we would expect the finished chain to be ``C1CCCCC1NC2CCCCC2'', nothing is stopping the grammar from developing it into ``C1CCCCC2NC2CCCCC1'' instead.
+
+This was a problem we ran into fairly quickly after applying the cycle size limit changes to the grammar, resulting in one very long cycle and one small one instead of two appropriate cycles. The solution was to integrate into the left-hand side of the production information about which cycle is being developed.
+
+As Kraev mentions in the original paper\cite{kraev2018grammars}, this change will make the grammar grow very quickly in size based on the maximum number of cycles allowed (not to be confused with the maximum cycle-length).
+We chose to limit it to 6 cycles for two reasons. 
+First of all, only eight molecules in the ZINC250K dataset~\cite{Akhmetshin2021} have more than 6 cycles. 
+The second reason is that the smallest possible cycle, cycles of length 3, need 5 tokens in our model. Having 6 cycles of that length would take 30 out of the 40 tokens in our molecule and, in our tests, we did not notice any molecule with more than 4 cycles.
+\david{Is this appropriate as a justification? La deuxième raison}
+
+After all these changes, we ensured that cycles had an appropriate length. However this meant that our \gls{cfg} now had 32 terminals, 194 nonterminals and 538 productions. After conversion to the Chomsky Normal Form, the number of nonterminals and productions, respectively, explode to 640 and 1996.
+It is a large grammar.
+
+\david{analyze grammar algorithm to determine if it is cubic according to variables or productions}
+
+
+\end{document}
