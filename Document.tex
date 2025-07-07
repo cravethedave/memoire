@@ -53,13 +53,14 @@
 \newcommand{\ai}{{\sc ai}}
 
 \usepackage{todonotes}
-\newcommand{\david}[1]{\todo[inline,color=cyan]{{\bf David:} #1}}
-\newcommand{\davidSide}[1]{\todo[color=cyan]{{\bf David:} #1}}
+\newcommand{\david}[1]{\todo[inline,color=cyan]{{\bf Do this:} #1}}
+\newcommand{\gilles}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
+\newcommand{\askGilles}[1]{\todo[inline,color=green]{{\bf @Gilles, I have a question:} #1}}
 \usepackage{booktabs}
 \usepackage{cancel}
 \usepackage{longtable}
 \usepackage{pgfplots}
-\usetikzlibrary{matrix,fit}
+\usetikzlibrary{matrix,fit,automata}
 
 \makeatletter
 \newcommand{\myparagraph}[1]{\paragraph{#1}\mbox{}\\}

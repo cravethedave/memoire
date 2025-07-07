@@ -35,9 +35,13 @@ This \gls{cp} approach, which excels at imposing hard rules and long-term struct
 Often times, these models struggle to exhibit long-term structure, stemming in part from the token-by-token nature of the prediction process used to generate a sequence.
 In other words, these models do not explicitly learn the hard rules that determine validity nor desirability and merely mimic what was observed.
 
-\david{Ce texte, qui vient de l'article IJCAI, convient moins bien ici. On ne parle pas de propriétés partiellement apprises à l'entraînement mais de n'importe quelle propriété qu'on souhaiterait imposer.}
-While this problem can occur both during training, where such global structure must be learned, and during inference (generation), where the gradually-outputted sequence must be guided toward that structure, we only consider the latter.
-Considering that the trained model has already partially learned the structure, we can fine-tune the sequence by using \gls{cpbp}.
+\askGilles{Is the below better instead of the partially learned properties. La section "While this problem"}
+While this problem can be addressed at training, by changing what the model is trained on such that it can better learn the structure, we wish to introduce a \gls{cpbp} model at inference time (generation). This should enforce the presence of the desired structure, which is critical if it is mandatory~\cite{deutsch2019general,lee2019gradient}.
+In other words, this technique could allow us to target properties and structures that the model was never trained to generate while still maintaining advantages of the original model.
+
+% \gilles{Ce texte, qui vient de l'article IJCAI, convient moins bien ici. On ne parle pas de propriétés partiellement apprises à l'entraînement mais de n'importe quelle propriété qu'on souhaiterait imposer.}
+% While this problem can occur both during training, where such global structure must be learned, and during inference (generation), where the gradually-outputted sequence must be guided toward that structure, we only consider the latter.
+% Considering that the trained model has already partially learned the structure, we can fine-tune the sequence by using \gls{cpbp}.
 
 This guarantees that a generated molecule will respect the desired structure, which is critical if it is mandatory~\cite{deutsch2019general,lee2019gradient}.
 
@@ -90,7 +94,7 @@ During our research we will answer the following questions:
     \item Can we use \acrshort{cp} to model desirable molecular properties in \acrshort{smiles} molecules?
     \item Does combining a \acrshort{cp} model with a \acrshort{nlp} model improve the realism of generated molecules?
 \end{enumerate}
-\david{Le dernier point me fait encore douter. C'est évident que oui puisqu'on utilise le même modèle durant la génération ET l'évaluation. Donc c'est sûr que ce qu'on génère va être plus réaliste, aka ressembler plus à ce qu'il y a dans le dataset}
+\askGilles{Le dernier point me fait encore douter. C'est évident que oui puisqu'on utilise le même modèle durant la génération ET l'évaluation. Donc c'est sûr que ce qu'on génère va être plus réaliste, aka ressembler plus à ce qu'il y a dans le dataset}
 
 \section{Thesis Outline}
 \label{sec:intro/outline}

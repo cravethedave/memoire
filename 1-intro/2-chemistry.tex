@@ -21,7 +21,6 @@ Having a complete valence shell is the stable configuration that most atoms tend
 If we take Hydrogen and Carbon as examples, two of the more common atoms in organic chemistry, they need one and four more electrons respectively to complete their valence shell. The earlier atoms used in organic chemistry have the following number of valence electrons: Boron has 3; Carbon has 4; Nitrogen and Sulfur have 5; Oxygen and Sulphur have 6; Fluorine, Chlorine, Bromine and Iodine have 7.
 They can do this by making the corresponding number of covalent bonds required to fill their valence shell (commonly represented as line segments between atoms; see e.g. Figure~\ref{fig:complex_smiles}A).
 
-\david{Cite well, I think it is done, but verify}
 \begin{figure}[t]
     \centering
     \includegraphics{images/complex_smiles.png}
@@ -54,7 +53,7 @@ We will be using a one-dimensional encoding in our work to simplify the represen
 We will present different one-dimensional encodings used in the molecule discovery field.
 
 
-\david{J'ai add canon SMILES pour montrer d'ou vient deepSMILES, mais maybe not needed? Je trouvais ca plus simple pour comparer}
+\askGilles{J'ai add canon SMILES pour montrer d'ou vient deepSMILES, mais maybe not needed? Je trouvais ca plus simple pour comparer}
 \begin{table}[t]
     \centering
     \begin{tabular}{|c|p{5in}|}
@@ -102,7 +101,7 @@ This encoding has gained a lot of popularity in the automated molecule discovery
 However it comes with certain issues that we must address. Unlike \gls{inchi}, \gls{smiles} does not offer a unique encoding for each molecule. It is therefore possible to generate two different strings that describe the same molecule.
 Another prominent issue is linked to \gls{smiles}' special tokens. By requiring an opening token, as is needed to describe cycles, branches and isotopes (which we did not describe), any string that does not have corresponding open and close tokens is syntactically invalid. 
 
-\david{À déplacer là où tu parleras des limites de la ML}
+\gilles{À déplacer là où tu parleras des limites de la ML}
 This can be problematic in token-by-token generation if these rules are not hard constraints, which is the case in \gls{ml} techniques since they lack the ability to impose long-term structure.
 
 \gls{smiles} also has no check on the valence shells of the atoms within it. 

@@ -10,37 +10,21 @@
 In this chapter, we will put forward a way to model that can represent valid molecules using \gls{cp}.
 As mentioned previously, we choose to use \gls{smiles} to encode our molecules. This is a simple and easy-to-read one-dimensional molecule representation which can easily be modelled by \gls{cp}.
 
-
-\section{\gls{smiles} Representation}
-\david{Should I justify the size of our molecules more? C'était relativement arbitraire comme décision, mais on l'a fait pour garder de la complexité et limiter le temps de recherche dans l'arbre. On avait fait des tests, mais je n'ai plus les valeurs (i don't think so at least)}
-We chose to limit the size of our molecules to 40 tokens. We made this decision to ensure the problem was difficult enough without making it too long to solve and get results.
-
-Each variable's initial domain contains the entire \gls{smiles} alphabet. This allows any combination of \gls{smiles} tokens including invalid combinations. To ensure validity, we use three constraints as described in the following subsections.
+We first describe the grammar that was required to describe the \gls{smiles} language. This is the key component that allows our model to generate molecules in the right encoding. We will then give a formal definition for our model before finally explaining our experiments and results.
 
 
-\subsection{Grammar}
-In our work, we use a variation of Kraev's grammar \cite{kraev2018grammars} to ensure that atom valences are respected in the generated molecules. In \gls{smiles} notation, an ion  is written differently than an 
+\section{\gls{smiles} Grammar}
+\label{sec:smiles-valid-grammar}
+\gls{smiles} was developed for applications in organic chemistry, this can be seen in some of its rules. For example, the addition of tokens to describe aromatic rings is something that was added to simplify the notation, specifically due to the common occurrence of these rings. Another example is that simple atom tokens with no descriptor tokens have an implied full valence shell. \gls{smiles} requires an explicit indication when an atom does not respect its valence shell, whether it has more or less than the expected amount. This is why the grammar we chose to use, which is a variation of the one described by Kraev in his work~\cite{kraev2018grammars}, ensures that atom valences are respected.
 
-Respecting atom valences
-
-increases the potential stability of the generated molecule. However, we cannot guarantee the stability of the molecule even if we do respect valence rules since it is much more complex.
+\askGilles{This removes le terme non spécifique: stability.}
 
 The original work uses masks in addition to this grammar to completely avoid invalid outputs.
 The first mask handles numerical assignment for cycles, guaranteeing that cycles are numbered correctly.
 The second mask avoids making cycles that are too small (\ie cycles of 2 atoms) and cycles that are too long. They limit their cycle length to 8 based on what they observe in their database~\cite{kraev2018grammars}.
 
+\gilles{Include important rules here from grammar}
 We address both of these issues by modifying the base grammar and adding new constraints as will be discussed later.
-
-
-\subsubsection{Chomsky Normal Form}
-The solver we use, miniCPBP \david{cite miniCPBP}, has an implementation of the grammar constraint that requires a grammar in Chomsky Normal Form.
-
-\david{Potentially insert what is in the intro here}
-
-We automated the process of converting the \gls{cfg} into the right form. This allows us to keep working on the more readable \gls{cfg} format.
-
-The original grammar from Kraev contained 34 terminals, 36 nonterminals and 138 productions. After conversion, the number of nonterminals and productions, respectively, increase to 169 and 411.
-
 
 \subsubsection{Padding}
 For the purpose of using this grammar in our \gls{cp} model, we add padding tokens that can complete the end of a molecule. 
@@ -51,7 +35,6 @@ An easy way to make this change is to create a new starting token that can be de
 
 
 \subsubsection{Hydrogen tokens}
-\david{Section potentially useless, mais je voulais être explicit avec tous les changements qu'on a fait.}
 Some Hydrogen tokens can be included in the molecule. These can be followed by a number to indicate the number of Hydrogen atoms present. We change these tokens to directly include the number.
 Instead of needing two tokens (``H'' and ``3'') we now use one token (``H3'') made up of two characters.
 
@@ -59,25 +42,124 @@ This avoids confusing Hydrogen count tokens for cycle tokens and improves our mo
 
 
 \subsubsection{Cycle-length limit}
-The final required modification we make to our grammar is to limit the cycle length. This guarantees that the cycle length remains in the desired range (between 3 and 8 inclusively) and that an opened cycle is necessarily closed. Unclosed cycles are syntactically invalid, but long cycles seem to be infrequent because of lower stability.
+The final required modification we make to our grammar is to limit the cycle length. This guarantees that the cycle length remains in the desired range (between 3 and 8 inclusively) and that an opened cycle is necessarily closed. Unclosed cycles are syntactically invalid, but long cycles are infrequent in datasets of known drug-like molecules.
 MOSES~\cite{MOSES}, a data set of about two million molecules, never exceeds length-6 cycles while another, Zinc\_250k~\cite{Akhmetshin2021}, features some length-8 cycles. 
 
 We achieve this by limiting the number of tokens that a cycle production can be developed into. This information must be encoded in nonterminals where a larger cycle nonterminal can be rewritten as an atom and a smaller cycle nonterminal.
 
-This change alone guarantees that any nonterminal ``num'' will have another nonterminal ``num'' within an acceptable distance. However, this does not guarantee that the nonterminal ``num'' will be developped into the same cycle number. Take the unfinished chain ``C\textit{num}CCCCC\textit{num}NC\textit{num}CCCCC\textit{num}'' as an example. While we would expect the finished chain to be ``C1CCCCC1NC2CCCCC2'', nothing is stopping the grammar from developing it into ``C1CCCCC2NC2CCCCC1'' instead.
+This change alone guarantees that any nonterminal ``num'' will have another nonterminal ``num'' within an acceptable distance. However, this does not guarantee that the nonterminal ``num'' will be developed into the same cycle number. Take the unfinished chain ``C\textit{num}CCCCC\textit{num}NC\textit{num}CCCCC\textit{num}'' as an example. While we would expect the finished chain to be ``C1CCCCC1NC2CCCCC2'', nothing is stopping the grammar from developing it into ``C1CCCCC2NC2CCCCC1'' instead.
 
 This was a problem we ran into fairly quickly after applying the cycle size limit changes to the grammar, resulting in one very long cycle and one small one instead of two appropriate cycles. The solution was to integrate into the left-hand side of the production information about which cycle is being developed.
 
 As Kraev mentions in the original paper\cite{kraev2018grammars}, this change will make the grammar grow very quickly in size based on the maximum number of cycles allowed (not to be confused with the maximum cycle-length).
-We chose to limit it to 6 cycles for two reasons. 
-First of all, only eight molecules in the ZINC250K dataset~\cite{Akhmetshin2021} have more than 6 cycles. 
-The second reason is that the smallest possible cycle, cycles of length 3, need 5 tokens in our model. Having 6 cycles of that length would take 30 out of the 40 tokens in our molecule and, in our tests, we did not notice any molecule with more than 4 cycles.
-\david{Is this appropriate as a justification? La deuxième raison}
+Therefore, it was critical to limit the number of cycles to avoid drastically increasing the size of our grammar.
+After examining the two datasets at our disposal, 6 molecules from the ZINC250K dataset~\cite{Akhmetshin2021} and 4 from the MOSES~\cite{MOSES} dataset exceed 6 cycles. These datasets contain, respectively, 250K and 2M molecules. Based on this, we decided to limit the number of cycles to 6, seeing as it does not exclude many molecules from the ones observed in the known drugs datasets.
 
-After all these changes, we ensured that cycles had an appropriate length. However this meant that our \gls{cfg} now had 32 terminals, 194 nonterminals and 538 productions. After conversion to the Chomsky Normal Form, the number of nonterminals and productions, respectively, explode to 640 and 1996.
-It is a large grammar.
+All of these changes ensure that cycles have an appropriate length. However, this does increase the size of the grammar. The \gls{cfg} now has 32 terminals, 194 nonterminals and 538 productions.
 
-\david{analyze grammar algorithm to determine if it is cubic according to variables or productions}
+
+\section{Our Model}
+This section will describe first describe our model's variables and their domains. We will then go over formal definitions of the constraints used to model valid molecules and break certain easily-identifiable symmetries.
+
+\subsection{Variables}
+We chose to limit the size of our molecules to 40 tokens. Since we use padding tokens, this means we can model any molecule of size 40 or less, which represents 83\% of all molecules in the two datasets chose to use in our work (ZINC250K and MOSES).
+This decision also ensures the problem is difficult while avoiding absurd solve times.
+
+We define 40 variables, one for each token in the molecule such as $\mathcal{X} = {X_1, X_2, \dots, X_{40}}$. Each of these tokens start with the same domain, containing every possible terminal in the \gls{smiles} grammar alphabet. This is formally defined as $D(X_i) = $\{
+    Br, Cl, F, I, C, N, O, S, c, n, o, s, 1, 2, 3, 4, 5, 6, (, ), =, \#, [, ], +, -, H, H3, /, \textbackslash, @, \_
+\}
+
+This setup allows any combination of \gls{smiles} tokens of size 40, including invalid ones. To ensure validity, we use three constraints as described in the following subsection.
+
+\subsection{Constraints}
+
+\subsubsection{Grammar Constraint}
+The grammar constraint is responsible for guaranteeing the \gls{smiles} syntax in our generated molecules. The grammar constraint is a global constraint applied to all variables in the domain. It also requires the \gls{cfg} that we defined earlier in Section~\ref{sec:smiles-valid-grammar}.
+
+$$
+    \texttt{grammar}(\langle X_1, X_2, \ldots, X_{40} \rangle, \mathcal{G}_{\texttt{SMILES}})\\
+$$
+
+This constraint does a lot of the work in ensuring that the generated output is a valid \gls{smiles} string. It guarantees:
+\begin{enumerate}
+    \item No valence mistakes. Atoms used in the molecule will respect the expected number of bonds to fill their valence shell.
+    \item Opened cycles are appropriately paired to another cycle token to close it.
+    \item Cycles respect a maximal length to avoid non-sensically large cycles that do not appear in drug-like molecules in known datasets.
+    \item Any branch token has a corresponding opening/closing branch token.
+\end{enumerate}
+
+This constraint on its own would already generate valid \gls{smiles} strings. However, we add two more constraints to improve the readability of our generated results and avoid symmetries.
+
+\subsubsection{Cycle Parity Constraint}
+The cycle parity constraint ensures that all cycle tokens in the grammar's alphabet are used either twice or never. This avoids having two cycles with the same cycle identifier. In classic \gls{smiles} notation, the same cycle identifier can be reused if there is no ambiguity.
+
+We decided not to allow the reuse of cycle tokens, since adding checks to avoid ambiguity in the grammar would make it much more complex, as we would need to track which cycles are currently open at all times. This simple constraint avoids the generation of ambiguous molecules while avoiding a larger grammar that would have taken a long time to design.
+
+$$
+    \among(\langle X_1, X_2, \ldots, X_{40} \rangle, \{j\}, \{0,2\})\ \forall\ j\ \vert\ 1 \leq j \leq 6
+$$
+
+\subsubsection{Cycle Counting Constraint}
+The cycle counting constraint is a symmetry breaking constraint. It avoids using larger cycle identification tokens before smaller ones. In other words, the first opened cycle is identified using the token ``1'', the second will be identified using ``2'' and so on and so forth.
+This ensures there is only one possible cycle token choice every time a cycle token is placed.
+
+This constraint is considered to be symmetry breaking since it avoids exploring branches where a ``1'' would be replaced by a ``2'' without any other changes.
+
+We represent this using a \regular\ constraint which ensures the variables it is placed upon respect a given automaton. The automaton defined in Figure~\ref{fig:cycleCountingAutomaton} ensures that, at any given state, we can freely place any cycle token already encountered. It also guarantees that only the next smallest cycle token can be used, excluding the ones already encountered, and using it transitions us to the next state.
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \tikzset{
+            ->, % makes the edges directed
+            node distance=2.5cm, % specifies the minimum distance between two nodes. Change if necessary.
+            every state/.style={thick, fill=gray!10}, % sets the properties for each ’state’ node
+            initial text=$ $, % sets the text that appears on the start arrow
+        }
+        \node[state, initial] (S) {start};
+        \node[state, right of=S] (q1) {1 cycle};
+        \node[state, right of=q1] (q2) {2 cycles};
+        \node[right =0.5cm of q2] (skip_1) {$\cdots$};
+        \node[state, right =0.5cm of skip_1] (qi) {i cycles};
+        \node[right =0.75cm of qi] (skip_2) {$\cdots$};
+        \node[state, right =0.5 of skip_2] (q6) {6 cycles};
+
+        \draw
+        (S) edge[loop above] node{$\Sigma \setminus \{1,\ldots,6\}$} (S)
+        (S) edge[above] node{1} (q1)
+        (q1) edge[loop below] node{$\Sigma \setminus \{2,\ldots,6\}$} (q1)
+        (q1) edge[above] node{2} (q2)
+        (q2) edge[loop above] node{$\Sigma \setminus \{3,\ldots,6\}$} (q2)
+        (q2) edge[above] node{3} (skip_1)
+        (skip_1) edge[above] node{i} (qi)
+        (qi) edge[loop below] node{$\Sigma \setminus \{i+1,\ldots,6\}$} (qi)
+        (qi) edge[above] node{i+1} (skip_2)
+        (skip_2) edge[above] node{6} (q6)
+        (q6) edge[loop above] node{$\Sigma$} (q6)
+        ;
+    \end{tikzpicture}
+    \caption[Automaton $\mathcal{A}$ which imposes ordinal order on cycle numbering.]{Automaton $\mathcal{A}$ which imposes ordinal order on cycle numbering. The starting state has no cycles that have been opened yet and subsequent states each contain one more opened cycle than the last. The $\Sigma$ character represents all terminals in the grammar's alphabet. Every token, other than certain cycle tokens, lead back to the same state. Starting at the first state after the start state, cycle tokens that have already been seen can be placed freely.}
+    \label{fig:cycleCountingAutomaton}
+\end{figure}
+
+
+\section{Experiments}
+
+\subsubsection{Chomsky Normal Form}
+The solver we use, miniCPBP\footnote{\url{https://github.com/PesantGilles/MiniCPBP}}, has an implementation of the grammar constraint that requires a grammar in Chomsky Normal Form.
+
+\david{Potentially insert what is in the intro here}
+
+We automated the process of converting the \gls{cfg} into the right form. This allows us to keep working on the more readable \gls{cfg} format.
+
+The original grammar from Kraev contained 34 terminals, 36 nonterminals and 138 productions. After conversion, the number of nonterminals and productions, respectively, increase to 169 and 411.
+
+The complexity of the base propagation algorithm is cubic in regards to the number of variables as well as linear according to the number of productions~\cite{quimper2006}. The number of variables in our model does not change with the size of the grammar, however we do have nearly five times as many productions.
+However, seeing as we are using Belief Augmented Constraint Programming, this requires an additional step which is also cubic in relation to the number of variables, linear in relation to the number of productions and linear in relation to the number of nonterminals.
+This will slow down the total time required for our algorithms to run.
+
+
+\section{Results}
 
 
 \end{document}
