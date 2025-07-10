@@ -19,7 +19,7 @@ A valence shell is made up of multiple subshells of different energy levels: 1s,
 Having a complete valence shell is the stable configuration that most atoms tend towards. To achieve this, atoms will make ionic bonds, a bond where an electron is taken from another atom, or covalent bonds, a bond where an electron is shared by two atoms. In the case of organic molecules, we will usually only consider covalent bonds.
 
 If we take Hydrogen and Carbon as examples, two of the more common atoms in organic chemistry, they need one and four more electrons respectively to complete their valence shell. The earlier atoms used in organic chemistry have the following number of valence electrons: Boron has 3; Carbon has 4; Nitrogen and Sulfur have 5; Oxygen and Sulphur have 6; Fluorine, Chlorine, Bromine and Iodine have 7.
-They can do this by making the corresponding number of covalent bonds required to fill their valence shell (commonly represented as line segments between atoms; see e.g. Figure~\ref{fig:complex_smiles}A).
+They can do this by making the corresponding number of covalent bonds required to complete their valence shell (commonly represented as line segments between atoms; see e.g. Figure~\ref{fig:complex_smiles}A).
 
 \begin{figure}[t]
     \centering
@@ -48,12 +48,12 @@ This attraction, between two different polarized molecules, is what we call a Hy
 
 %%% SubSection Molecule Encodings %%%
 \subsection{Molecule Encodings}
+\label{sec:molecule-encodings}
 Molecules can be encoded in many different ways. Two common methods are representing molecules as graphs or as one-dimensional strings.
 We will be using a one-dimensional encoding in our work to simplify the representation and potentially allow a combined model using \gls{nlp} models.
 We will present different one-dimensional encodings used in the molecule discovery field.
 
 
-\askGilles{J'ai add canon SMILES pour montrer d'ou vient deepSMILES, mais maybe not needed? Je trouvais ca plus simple pour comparer}
 \begin{table}[t]
     \centering
     \begin{tabular}{|c|p{5in}|}
@@ -127,6 +127,7 @@ Another important difference is that all tokens are described between square bra
 
 %%% SubSection Lipinski Rule of Five %%%
 \subsection{Lipinski's Rule of Five}
+\label{sec:lipinski-rules}
 Lipinski's Rule of Five is a set of rules describing properties that orally administered drugs tend to respect. While there are only four rules, each rule contains a value that is a multiple of five, which is where the name comes from. 
 
 The rules are as follows:

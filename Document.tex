@@ -57,6 +57,7 @@
 \newcommand{\gilles}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
 \newcommand{\askGilles}[1]{\todo[inline,color=green]{{\bf @Gilles, I have a question:} #1}}
 \usepackage{booktabs}
+\usepackage{soul}
 \usepackage{cancel}
 \usepackage{longtable}
 \usepackage{pgfplots}
@@ -318,7 +319,7 @@ a été dûment accepté\ifthenelse{\equal{\monDiplome}{M}}{}{e} par le jury d'e
 \subfile{0-pre/4-abrev.tex}
 
 
-\ifthenelse{\equal{\AnnexesPresentes}{O}}{\listofappendices}{}
+% \ifthenelse{\equal{\AnnexesPresentes}{O}}{\listofappendices}{}
 
 
 \mainmatter
@@ -355,9 +356,7 @@ a été dûment accepté\ifthenelse{\equal{\monDiplome}{M}}{}{e} par le jury d'e
 	\bibliographystyle{IEEEtran-francais}    % Style bibliographique / Bibliography style 
 }
 %
-\ifthenelse{\equal{\AnnexesPresentes}{O}}{
-	\appendix%
-	\newcommand{\Annexe}[1]{\annexe{#1}\setcounter{figure}{0}\setcounter{table}{0}\setcounter{footnote}{0}}%
-	\include{9-Annexes}}
-{}
+\appendix%
+\newcommand{\Annexe}[1]{\annexe{#1}\setcounter{figure}{0}\setcounter{table}{0}\setcounter{footnote}{0}}%
+\include{9-annex}
 \end{document}

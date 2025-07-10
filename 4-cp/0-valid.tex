@@ -15,16 +15,14 @@ We first describe the grammar that was required to describe the \gls{smiles} lan
 
 \section{\gls{smiles} Grammar}
 \label{sec:smiles-valid-grammar}
-\gls{smiles} was developed for applications in organic chemistry, this can be seen in some of its rules. For example, the addition of tokens to describe aromatic rings is something that was added to simplify the notation, specifically due to the common occurrence of these rings. Another example is that simple atom tokens with no descriptor tokens have an implied full valence shell. \gls{smiles} requires an explicit indication when an atom does not respect its valence shell, whether it has more or less than the expected amount. This is why the grammar we chose to use, which is a variation of the one described by Kraev in his work~\cite{kraev2018grammars}, ensures that atom valences are respected.
-
-\askGilles{This removes le terme non spécifique: stability.}
+\gls{smiles} was developed for applications in organic chemistry, this can be seen in some of its rules. For example, the addition of tokens to describe aromatic rings is something that was added to simplify the notation, specifically due to the common occurrence of these rings. Another example is that simple atom tokens with no descriptor tokens have an implied complete valence shell (\ie the atom is in its stable state). \gls{smiles} requires an explicit indication when an atom does not respect its valence shell, whether it has more or less than the expected amount. This is why the grammar we chose to use, which is a variation of the one described by Kraev in his work~\cite{kraev2018grammars}, ensures that atom valences are respected.
 
 The original work uses masks in addition to this grammar to completely avoid invalid outputs.
 The first mask handles numerical assignment for cycles, guaranteeing that cycles are numbered correctly.
 The second mask avoids making cycles that are too small (\ie cycles of 2 atoms) and cycles that are too long. They limit their cycle length to 8 based on what they observe in their database~\cite{kraev2018grammars}.
 
 \gilles{Include important rules here from grammar}
-We address both of these issues by modifying the base grammar and adding new constraints as will be discussed later.
+We address both of these issues by modifying the base grammar and adding new constraints as will be discussed later. The final grammar used for validity can be seen in Appendix~\ref{annex:grammar-validity}.
 
 \subsubsection{Padding}
 For the purpose of using this grammar in our \gls{cp} model, we add padding tokens that can complete the end of a molecule. 
@@ -38,11 +36,18 @@ An easy way to make this change is to create a new starting token that can be de
 Some Hydrogen tokens can be included in the molecule. These can be followed by a number to indicate the number of Hydrogen atoms present. We change these tokens to directly include the number.
 Instead of needing two tokens (``H'' and ``3'') we now use one token (``H3'') made up of two characters.
 
+\gilles{mais est-ce que ça nous cause des problèmes quand on combine avec un LLM car nos jetons et les siens sont alors différents?}
+
+\askGilles{Potentially, mais probablement non. Le LLM utilise des ngrams comme tokens, on tokenize ses ngrams pour en ressortir nos tokens. Donc on fait un ``cast'' de son alphabet au notre.}
+
 This avoids confusing Hydrogen count tokens for cycle tokens and improves our model's understanding of what it is generating.
 
 
 \subsubsection{Cycle-length limit}
-The final required modification we make to our grammar is to limit the cycle length. This guarantees that the cycle length remains in the desired range (between 3 and 8 inclusively) and that an opened cycle is necessarily closed. Unclosed cycles are syntactically invalid, but long cycles are infrequent in datasets of known drug-like molecules.
+The final required modification we make to our grammar is to limit the cycle length.
+This guarantees that the cycle length remains in the desired range (between 3 and 8 inclusively). 
+\askGilles{C'est un abus de language de ma part, la grammaire original assure qu'un cycle ouvert sera fermé, mais pas nécessairement avec le bon token. Ça assure plutôt la présence de deux tokens de cycles, mais ne fait rien par rapport à quel token de cycle on utilise.}
+Unclosed cycles are syntactically invalid, but long cycles are infrequent in datasets of known drug-like molecules.
 MOSES~\cite{MOSES}, a data set of about two million molecules, never exceeds length-6 cycles while another, Zinc\_250k~\cite{Akhmetshin2021}, features some length-8 cycles. 
 
 We achieve this by limiting the number of tokens that a cycle production can be developed into. This information must be encoded in nonterminals where a larger cycle nonterminal can be rewritten as an atom and a smaller cycle nonterminal.
@@ -55,26 +60,39 @@ As Kraev mentions in the original paper\cite{kraev2018grammars}, this change wil
 Therefore, it was critical to limit the number of cycles to avoid drastically increasing the size of our grammar.
 After examining the two datasets at our disposal, 6 molecules from the ZINC250K dataset~\cite{Akhmetshin2021} and 4 from the MOSES~\cite{MOSES} dataset exceed 6 cycles. These datasets contain, respectively, 250K and 2M molecules. Based on this, we decided to limit the number of cycles to 6, seeing as it does not exclude many molecules from the ones observed in the known drugs datasets.
 
-All of these changes ensure that cycles have an appropriate length. However, this does increase the size of the grammar. The \gls{cfg} now has 32 terminals, 194 nonterminals and 538 productions.
+All of these changes ensure that cycles have an appropriate length. However, this does increase the size of the grammar. While the original \gls{cfg} from Kraev contained 34 terminals, 36 nonterminals and 138 productions, the current \gls{cfg} now has 32 terminals, 194 nonterminals and 538 productions.
 
 
 \section{Our Model}
-This section will describe first describe our model's variables and their domains. We will then go over formal definitions of the constraints used to model valid molecules and break certain easily-identifiable symmetries.
+This section will first describe our model's variables and their domains.
+We will then go over formal definitions of the constraints used to model valid molecules and break certain easily-identifiable symmetries.
+Following the validity constraints, we define constraints that target specific structures in our generated molecules.
+Finally, we will define the constraints required to target desirable properties.
+
 
 \subsection{Variables}
 We chose to limit the size of our molecules to 40 tokens. Since we use padding tokens, this means we can model any molecule of size 40 or less, which represents 83\% of all molecules in the two datasets chose to use in our work (ZINC250K and MOSES).
-This decision also ensures the problem is difficult while avoiding absurd solve times.
+This decision ensures the problem is representative of real-life molecules observed in our datasets and hence provides a meaningful empirical study.
 
-We define 40 variables, one for each token in the molecule such as $\mathcal{X} = {X_1, X_2, \dots, X_{40}}$. Each of these tokens start with the same domain, containing every possible terminal in the \gls{smiles} grammar alphabet. This is formally defined as $D(X_i) = $\{
+We define 40 variables, one for each token in the molecule such as $\mathcal{X} = {X_1, X_2, \dots, X_{40}}$. Each token starts with the same domain, containing every possible terminal in the \gls{smiles} grammar alphabet.
+\askGilles{Oui, on dit plus tot que les atomes qui nous intéresses sont les atomes organiques}
+This is formally defined as 
+\begin{center}
+$D(X_i) = $\{
     Br, Cl, F, I, C, N, O, S, c, n, o, s, 1, 2, 3, 4, 5, 6, (, ), =, \#, [, ], +, -, H, H3, /, \textbackslash, @, \_
 \}
+\end{center}
 
 This setup allows any combination of \gls{smiles} tokens of size 40, including invalid ones. To ensure validity, we use three constraints as described in the following subsection.
 
-\subsection{Constraints}
+
+\subsection{Validity Constraints}
+\label{sec:validity-constraint-definition}
+This section will answer our first research question: Can we use \acrshort{cp} to model valid molecules using a one-dimensional encoding?
+With the following constraints, our model will be able to model valid \gls{smiles} molecules.
 
 \subsubsection{Grammar Constraint}
-The grammar constraint is responsible for guaranteeing the \gls{smiles} syntax in our generated molecules. The grammar constraint is a global constraint applied to all variables in the domain. It also requires the \gls{cfg} that we defined earlier in Section~\ref{sec:smiles-valid-grammar}.
+The grammar constraint is responsible for guaranteeing the \gls{smiles} syntax in our generated molecules. The grammar constraint is a global constraint applied to all variables in the model. It also requires the \gls{cfg} that we defined earlier in Section~\ref{sec:smiles-valid-grammar}.
 
 $$
     \texttt{grammar}(\langle X_1, X_2, \ldots, X_{40} \rangle, \mathcal{G}_{\texttt{SMILES}})\\
@@ -82,7 +100,7 @@ $$
 
 This constraint does a lot of the work in ensuring that the generated output is a valid \gls{smiles} string. It guarantees:
 \begin{enumerate}
-    \item No valence mistakes. Atoms used in the molecule will respect the expected number of bonds to fill their valence shell.
+    \item No valence mistakes. Atoms used in the molecule will respect the expected number of bonds to complete their valence shell.
     \item Opened cycles are appropriately paired to another cycle token to close it.
     \item Cycles respect a maximal length to avoid non-sensically large cycles that do not appear in drug-like molecules in known datasets.
     \item Any branch token has a corresponding opening/closing branch token.
@@ -99,15 +117,16 @@ $$
     \among(\langle X_1, X_2, \ldots, X_{40} \rangle, \{j\}, \{0,2\})\ \forall\ j\ \vert\ 1 \leq j \leq 6
 $$
 
-\subsubsection{Cycle Counting Constraint}
-The cycle counting constraint is a symmetry breaking constraint. It avoids using larger cycle identification tokens before smaller ones. In other words, the first opened cycle is identified using the token ``1'', the second will be identified using ``2'' and so on and so forth.
+\subsubsection{Cycle Numbering Constraint}
+\label{sec:cycle-numbering-constraint}
+The cycle numbering constraint is a symmetry-breaking constraint. It avoids using larger cycle identification tokens before smaller ones. In other words, the first opened cycle is identified using the token ``1'', the second will be identified using ``2'' and so on and so forth.
 This ensures there is only one possible cycle token choice every time a cycle token is placed.
 
-This constraint is considered to be symmetry breaking since it avoids exploring branches where a ``1'' would be replaced by a ``2'' without any other changes.
+This constraint is considered to be symmetry-breaking since it avoids exploring branches where a ``1'' would be replaced by a ``2'' without any other changes.
 
 We represent this using a \regular\ constraint which ensures the variables it is placed upon respect a given automaton. The automaton defined in Figure~\ref{fig:cycleCountingAutomaton} ensures that, at any given state, we can freely place any cycle token already encountered. It also guarantees that only the next smallest cycle token can be used, excluding the ones already encountered, and using it transitions us to the next state.
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \begin{tikzpicture}
         \tikzset{
@@ -143,16 +162,175 @@ We represent this using a \regular\ constraint which ensures the variables it is
 \end{figure}
 
 
-\section{Experiments}
+\subsection{Structure Constraints}
+This section will present two constraints targeting specific structures in generated molecules. These constraints will be used to get samples of varying difficulty during our experiments. These constraints will never be used on their own, instead always being used in tandem with the validity constraints from Section~\ref{sec:validity-constraint-definition}.
 
-\subsubsection{Chomsky Normal Form}
+\subsubsection{Cycle Count Constraint}
+This constraint forces our generated output to contain a certain number of cycles. 
+Using \gls{smiles} notation, this is incredibly simple to do.
+By previously placing the cycle numbering constraint, we guarantee that each cycle has its own number token used to identify it.
+This allows us to use an \among\ constraint, requiring the presence of the number token equivalent to the number of desired cycles, \eg if we want 4 cycles, we require the presence of the token ``4''.
+
+While this ensures we get 4 cycles, it actually ensures we get \textit{at least} 4 cycles. To avoid getting more than 4, we have to place a second \among\ constraint that forbids the use of the next smallest cycle token. In our example where we have 4 cycles, we would forbid the use of the token ``5''.
+
+Formally this is defined using the two following constraints where $c$ is the number of desired cycles in the chain. It is important we ask for 2 and not 1, since the cycle parity constraint from Section~\ref{sec:validity-constraint-definition} already restricts the number of appearances to either 0 or 2. 
+
+\begin{align*}
+    &\among(\langle X_1, X_2, \ldots, X_{40} \rangle, \{c\}, \{2\})\\
+    &\among(\langle X_1, X_2, \ldots, X_{40} \rangle, \{c+1\}, \{0\})
+\end{align*}
+
+
+\subsubsection{Branch Count Constraint}
+Similarly to the previous constraint, the branch count constraint requires a certain amount of branches in the generated output. Since the grammar constraint from Section~\ref{sec:validity-constraint-definition} ensures that any opened branch is closed, we can constrain the number of total branches by placing an \among\ constraint on either the opening or closing branch tokens. In the following definition, $b$ is the desired number of branches.
+
+$$
+    \among(\langle X_1, X_2, \ldots, X_{40} \rangle, \{``("\}, \{b\})
+$$
+
+
+\subsection{Molecular Property Constraints}
+In this section, we answer our second research question: Can we use \acrshort{cp} to model desirable molecular properties in \acrshort{smiles} molecules?
+
+We previously talked about Lipinski's rule of five in Section~\ref{sec:lipinski-rules}. We will show how it is possible to describe each of these properties using constraints in our current model.
+
+These constraints will never be used alone, they are always used with the constraints from Section~\ref{sec:validity-constraint-definition}.
+
+\subsubsection{Molecular Weight Constraint}
+The first property constraint is the molecular weight.
+Since the solver we use only allows for integers, we multiply all weight values by 10 to get more precision for this constraint.
+
+\paragraph{Estimating the weight of the grammar's tokens.}
+Since we are working on a one-dimensional representation, \gls{smiles}, we attempt to estimate the weight of the total molecule by estimating the weight of each token in the \gls{smiles} string.
+However, this isn't as simple as linking atoms to their atomic weight, since we have to account for the Hydrogen atoms that are potentially bonded but implicit in \gls{smiles} notation.
+
+An intuitive solution to this is to assume that each atom token is making two bonds, one on its left and one on its right in the \gls{smiles} chain.
+This allows us to assume that each atom token is bonded to two less Hydrogen atoms than the number of bonds needed to complete its valence shell, \eg Carbon, which needs to make 4 bonds to complete its valence shell, would have an assumed 2 bonds with Hydrogen atoms.
+
+However, this sometimes results in an overestimation of the molecule's weight.
+To correct this, we associate a weight, which is sometimes negative, to non-atomic tokens.
+
+Cycle tokens are an extra bond that our current weight model does not account for.
+Each extra bond is a bond that cannot be made with a Hydrogen atom.
+For that reason, we associate all our cycle tokens to the negative weight of a Hydrogen atom (\ie 10 in our case, reminder that we multiply our weights by 10 to get more significant numbers).
+
+While it would seem like branch tokens need special weights for the same reason.
+However, the opening branch token indicates an extra bond (\ie a negative weight) while the closing branch token indicates a lacking bond that we assumed was present (\ie a positive weight).
+Overall, these two tokens should almost always cancel out.
+
+Bond tokens are also associated to negative weights.
+When we make a double bond, there are two fewer Hydrogen atoms than we assumed there would be in our atom weights.
+Similarly, a triple bond means there are four fewer Hydrogen atoms bonded to the two atoms around the bond token.
+Therefore, the double and triple bond tokens are, respectively, associated to a weight of -20 and -40.
+
+We also had to adjust the weight of aromatic cycle tokens.
+As we explained earlier in Section~\ref{sec:molecule-encodings}, aromatic cycles are a specific type of cycle where single and double bonds alternate.
+This is common enough to justify a shorthand notation in \gls{smiles}.
+We can assume that these atoms are bonded to 3 other atoms, unlike the 2 bonds for non-aromatic atoms, \eg the aromatic variant of Carbon would have 1 Hydrogen atom bonded to it instead of 2 and its associated weight would reflect this.
+
+Finally, we did some testing to see the accuracy of our estimation.
+We used the open-source tool RDKit\footnote{https://www.rdkit.org/} to calculate the true weight.
+During our tests, we found that associating a positive weight to the ``+'' token improved the score.
+Atoms with a charge have a different number of Hydrogen atoms bonded to them.
+
+With this we create a weight array, ${\cal T}^w$ (see Appendix~\ref{annex:intuition-weight-array}),  where, each position, contains the estimated weight of the token that is associated to the position in the array, \eg if the token associated to id ``0'' is ``C'', we would put the weight of the non-aromatic Carbon token at position 0 in the weight array.
+
+\paragraph{Defining the constraint.}
+To apply this constraint, we first create weight variables, $W_i$, that will represent the weight of their associated token variables, $X_i$.
+
+We link the values of these variables using the \element\ constraint. It uses the weight array previously defined, ${\cal T}^w$ as a lookup table and ensures that $W_i$ is the value associated to index $X_i$.
+
+Once these variables are defined, we can constrain the sum of the variable array $W$ to our desired estimated value. To respect Lipinski's rule of five, we would limit the value to 500 Daltons (in our model, we would instead use 5000 since we multiply values by 10 for more significant numbers).
+
+
+\begin{align*}
+    &\element({\cal T}^w, X_i, W_i)  & & 1 \leq i \leq n \\
+    &\somme(\langle W_1, W_2,\ldots,W_n \rangle, W) & & \\
+    &W \leq 500  & &
+\end{align*}
+
+\paragraph{How accurate is this estimation?}
+As mentioned previously, we tested this process on the 2.2M molecules in the two datasets used thus far in our work. On average the error is $1.06\%$ of the molecule's real weight. However, at its maximum, we find errors of $4.83\%$.
+
+We include a graph of the distribution of relative error frequencies in Figure~\ref{fig:initial-weight-estimation}. Since it is an estimation, the relative error rate is acceptable and doesn't stop us from targeting a desirable region of the search space.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics{weight_hist_real.png}
+    \caption[Relative error frequency when estimating the weight of molecules using human intuition]{Relative error frequency when estimating the weight of molecules using human intuition. Most values are concentrated around 1\%, but we see nearly 50k molecules with errors around 2\%. We know the maximum error is 4.85\%, but it is so infrequent that it does not show up in the graph.}
+    \label{fig:initial-weight-estimation}
+\end{figure}
+
+\askGilles{Les resultats de la section suivante n'utilisent pas cette weight map, would this be future work? J'aimais bien que ça reforce notre intuition en montrant qu'on était proche, mais qu'il restait des erreurs}
+\askGilles{Si je parle de ça, je devrais définir les maths derrière les ridge regression, right?}
+\paragraph{Can we improve this using a simple linear regression?}
+By using a linear regression, we can see how close our intuition was and get a potential improvement to our current constraint.
+
+We first convert all our molecules into frequency arrays, where each position contains the number of times the associated token shows up in the molecule. We can then use the python library \texttt{SKLearn} to do a linear regression and find weights for each token.
+
+This leads to a good improvement on the average error, now of $0.23\%$, and a massive reduction in the maximum error, now of $2.80\%$. The results can be seen in Figure~\ref{fig:linreg-weight-estimation}.
+
+While the linear regression's weights do vary from our own, they are mostly similar (see Appendix~\ref{annex:linreg-weight-estimation}). This confirms our intuition but goes to show that there is room for improvement.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics{weight_hist_lin_reg.png}
+    \caption[Relative error frequency when estimating the weight of molecules using a linear regression]{Relative error frequency when estimating the weight of molecules using a linear regression.}
+    \label{fig:linreg-weight-estimation}
+\end{figure}
+
+
+\subsubsection{Hydrogen-Bond Acceptors Constraint}
+This property is simple enough to represent in \gls{smiles} notation. We found that a good estimation of the number of Hydrogen-bond acceptors in a molecule is the number of relevant atoms, \ie Nitrogen, Oxygen and Sulfur. The aromatic version of the atoms are included in the constraint. 
+
+We note the number of wanted acceptors as $N_a$ in the formal definition below.
+
+$$
+    \among(\langle X_1, X_2, \ldots, X_n \rangle, \{``N",``O",``S",``n",``o",``s"\}, N_a)\ \vert\ N_a \leq 10
+$$
+
+
+\subsubsection{Hydrogen-Bond Donors Constraint}
+This property, while similar to the previous one, requires changes to our grammar in order to be represented correctly. The full changes can be seen in Appendix~\ref{annex:grammar-lipinski}.
+
+Since our grammar already accounts for the number of bonds that atoms are making, it seemed natural to change certain productions to determine which atoms were donors and which ones weren't. However, this implies the need for new atom tokens to differentiate between the donor and non-donor version of the same atom. We add:
+\begin{itemize}
+    \item ``T'' as the donor version of ``N''
+    \item ``X'' as the donor version of ``O''
+    \item ``R'' as the donor version of ``S''
+\end{itemize}
+
+Since the atoms in question have to be bonded to a Hydrogen atom to be Hydrogen-bond donors, we suppose that they cannot be donors if they are a part of an aromatic cycle. For that reason, only the non-aromatic version of the atoms are included in the constraint.
+
+Once we have modified our grammar, it is simply a matter of limiting how many of the donor tokens appear in our molecule. We note the number of wanted donors as $N_d$ as seen below.
+
+$$
+\among(\langle X_1, X_2, \ldots, X_n \rangle, \{``T",``X",``R"\}, N_d)\ \vert\ N_d \leq 5
+$$
+
+
+\subsubsection{LogP Constraint}
+
+
+
+\section{Experiments}
+Having already answered 
+
+In this section, we detail the experiments done to answer our first research question: Can we use \acrshort{cp} to model valid molecules using a one-dimensional encoding?
+We also go over the necessary steps to run the experiments as well as specific testing conditions.
+
+These experiments were run on an AMD Rome 7532 processor (2.4GHz, 256M cache L3) with 1 GB of RAM and using a 30-minute timeout.
+
+For our tests, we will place additional structural constraints on the generated output. We require the presence of a certain number of branches and cycles in the respective range of 2-4 and 1-3. We add these constraints to evaluate the performance of different branching heuristics on problems of varying difficulty.
+
+\subsection{Chomsky Normal Form}
 The solver we use, miniCPBP\footnote{\url{https://github.com/PesantGilles/MiniCPBP}}, has an implementation of the grammar constraint that requires a grammar in Chomsky Normal Form.
 
 \david{Potentially insert what is in the intro here}
 
 We automated the process of converting the \gls{cfg} into the right form. This allows us to keep working on the more readable \gls{cfg} format.
 
-The original grammar from Kraev contained 34 terminals, 36 nonterminals and 138 productions. After conversion, the number of nonterminals and productions, respectively, increase to 169 and 411.
+After converting the original grammar, the number of nonterminals and productions, respectively, increase to 169 and 411. Meanwhile, the final grammar grows to 640 nonterminals and 1996 productions.
 
 The complexity of the base propagation algorithm is cubic in regards to the number of variables as well as linear according to the number of productions~\cite{quimper2006}. The number of variables in our model does not change with the size of the grammar, however we do have nearly five times as many productions.
 However, seeing as we are using Belief Augmented Constraint Programming, this requires an additional step which is also cubic in relation to the number of variables, linear in relation to the number of productions and linear in relation to the number of nonterminals.
@@ -160,6 +338,28 @@ This will slow down the total time required for our algorithms to run.
 
 
 \section{Results}
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{crrrrrr}
+    \hline
+      & \multicolumn{2}{c}{\texttt{domWdeg/random}} &  \multicolumn{2}{c}{\texttt{maxMarginalStrength/DFS}} & \multicolumn{2}{c}{\texttt{maxMarginalStrength/LDS}}\\
+      instance & time(s) & fails & time(s) & fails & time(s) & fails \\
+    \hline
+     $\mathtt{c}1\mathtt{b}2$ & 20.2 & 103 &  8.9 & 0 & 8.9 & 0\\
+     $\mathtt{c}1\mathtt{b}3$ & 14.0 & 65 &  12.0 & 0 & 11.7 & 0\\
+     $\mathtt{c}1\mathtt{b}4$ & 61.7 & 484 & 12.2 & 0 & 12.6 & 0\\
+     $\mathtt{c}2\mathtt{b}2$ & 26.3 & 105 &  -- & -- & 16.7 & 3\\
+     $\mathtt{c}2\mathtt{b}3$ & 37.4 & 253 & 16.0 & 0 & 16.0 & 0\\
+     $\mathtt{c}2\mathtt{b}4$ & 245.3 & 2083 &  17.9 & 12 & 17.5 & 6\\
+     $\mathtt{c}3\mathtt{b}2$ & 131.2 & 1389 & -- & -- & 32.0 & 14\\
+     $\mathtt{c}3\mathtt{b}3$ & 40.2 & 106 &  -- & -- & -- & --\\
+     $\mathtt{c}3\mathtt{b}4$ & 101.5 & 1040 &  -- & -- & 498.8 & 247\\
+    \hline
+    \end{tabular}
+    \caption{Comparing branching heuristics on some structurally-constrained molecule generation instances.}
+    \label{tab:results}
+\end{table}
 
 
 \end{document}
