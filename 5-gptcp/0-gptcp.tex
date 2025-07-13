@@ -8,7 +8,30 @@
 \label{chap:gpt+cp}
 
 
-\david{Explain how we parse the output into our tokens at some point}
+\section{Architecture}
+
+\subsection{\gls{llm}}
+\david{Describe the chosen LLM and why it is important to use a token by token model}
+
+\subsection{Oracle Constraint}
+\david{Describe the oracle constraint and how it uses BP to modify the LLM's probability distribution}
+
+\subsection{Communication}
+\david{Describe the basic http setup to allow for the communication between the two models. Explain how the LLM model is very fast meaning it can keep up with multiple CP models, this further justifies this communication method since the LLM is heavy but fast, meaning we use less memory this way while not impacting performance}
+\david{Describe that the http server is the LLM model and that the client is the cp model. This means CP will make the choice over the next token.}
+\david{Explain how we parse the output into our tokens before returning it to the CP model}
+
+
+\section{Experiments}
+\david{Chose to only use weight constraint from properties, it is complex but accurate, long term structure required, the LLM was not trained on this}
+\david{Describe the different combinations and why they are relevant}
+\david{Describe what PPL is. Explain that it will show how much CP denatures the results while trying to respect constraints.}
+
+
+\section{Results}
+\david{Explain results and how CP is great for long term structure but BP is even better}
+\david{The LLM model also improves accuracy compared to CP with no backtracking, goes to show that the LLM is not horrible}
+\david{PPL score proves that our CP model does not denature the results while still accurately targeting properties, even ones the model is not trained on}
 
 
 \end{document}
