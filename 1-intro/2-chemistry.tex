@@ -101,7 +101,7 @@ This encoding has gained a lot of popularity in the automated molecule discovery
 However it comes with certain issues that we must address. Unlike \gls{inchi}, \gls{smiles} does not offer a unique encoding for each molecule. It is therefore possible to generate two different strings that describe the same molecule.
 Another prominent issue is linked to \gls{smiles}' special tokens. By requiring an opening token, as is needed to describe cycles, branches and isotopes (which we did not describe), any string that does not have corresponding open and close tokens is syntactically invalid. 
 
-\gilles{À déplacer là où tu parleras des limites de la ML}
+\comment{À déplacer là où tu parleras des limites de la ML}
 This can be problematic in token-by-token generation if these rules are not hard constraints, which is the case in \gls{ml} techniques since they lack the ability to impose long-term structure.
 
 \gls{smiles} also has no check on the valence shells of the atoms within it. 

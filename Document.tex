@@ -54,14 +54,21 @@
 
 \usepackage{todonotes}
 \newcommand{\david}[1]{\todo[inline,color=cyan]{{\bf Do this:} #1}}
-\newcommand{\gilles}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
-\newcommand{\askGilles}[1]{\todo[inline,color=green]{{\bf @Gilles, I have a question:} #1}}
+\newcommand{\comment}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
+\newcommand{\gilles}[1]{\todo[inline,color=green]{{\bf @Gilles, I have a question:} #1}}
 \usepackage{booktabs}
 \usepackage{soul}
 \usepackage{cancel}
 \usepackage{longtable}
 \usepackage{pgfplots}
+\usepackage{float}
 \usetikzlibrary{matrix,fit,automata}
+
+\usepackage[ruled,lined,noend,linesnumbered]{algorithm2e}
+\SetAlgoProcName{Class}{anautorefname}
+\DontPrintSemicolon
+\SetKw{KwBreak}{break}
+\SetKw{KwDownTo}{down to}
 
 \makeatletter
 \newcommand{\myparagraph}[1]{\paragraph{#1}\mbox{}\\}

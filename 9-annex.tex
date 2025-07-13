@@ -614,23 +614,23 @@ Grammar used to model molecular properties in Appendix B\@.
 
     % atom_valence 1 changes
     \textcolor{red}{-} & atom\_valence\_1 & $\rightarrow$ & ``['' ``N'' hydrogen\_3 ``+'' ``]'' \\
-    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``T'' hydrogen\_3 ``+'' ``]'' \\
-    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``X'' \\
-    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``R'' \\
-    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``T'' \\
+    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``$N_D$'' hydrogen\_3 ``+'' ``]'' \\
+    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``$O_D$'' \\
+    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``$S_D$'' \\
+    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``$N_D$'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``C'' ``@'' hydrogen\_1 ``]'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``C'' ``@'' ``@'' hydrogen\_1 ``]'' \\
-    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``T'' hydrogen\_1 ``+'' ``]'' \\
+    \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``$N_D$'' hydrogen\_1 ``+'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``C'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``C'' ``@'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``C'' ``@'' ``@'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_1 & $\rightarrow$ & ``['' ``N'' ``+'' ``]'' \\
 
     % atom_valence 2 changes
-    \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``T'' \\
+    \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``$N_D$'' \\
     \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``C'' ``@'' hydrogen\_1 ``]'' \\
     \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``C'' ``@'' ``@'' hydrogen\_1 ``]'' \\
-    \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``T'' hydrogen\_1 ``+'' ``]'' \\
+    \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``$N_D$'' hydrogen\_1 ``+'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``C'' \\
     \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``C'' ``@'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_2 & $\rightarrow$ & ``['' ``C'' ``@'' ``@'' ``]'' \\
@@ -638,7 +638,7 @@ Grammar used to model molecular properties in Appendix B\@.
 
     % atom_valence 3 changes
     \textcolor{red}{-} & atom\_valence\_3 & $\rightarrow$ & ``['' ``N'' hydrogen\_1 ``+'' ``]'' \\
-    \textcolor{green}{+} & atom\_valence\_3 & $\rightarrow$ & ``['' ``T'' hydrogen\_1 ``+'' ``]'' \\
+    \textcolor{green}{+} & atom\_valence\_3 & $\rightarrow$ & ``['' ``$N_D$'' hydrogen\_1 ``+'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_3 & $\rightarrow$ & ``C'' \\
     \textcolor{green}{+} & atom\_valence\_3 & $\rightarrow$ & ``['' ``C'' ``@'' ``]'' \\
     \textcolor{green}{+} & atom\_valence\_3 & $\rightarrow$ & ``['' ``C'' ``@'' ``@'' ``]'' \\
@@ -671,86 +671,6 @@ Grammar used to model molecular properties in Appendix B\@.
 \end{longtable}
 \normalsize
 %endregion
-
-%region Annex C
-\Annexe{Human Intuition Token to Weight Map}
-\label{annex:intuition-weight-array}
-
-Human intuition weight map to link grammar tokens to their respective estimated weight in Appendix C\@
-
-{
-    \allowdisplaybreaks
-    \begin{align*}
-        &C \rightarrow 140\\
-        &c \rightarrow 130\\
-        &N \rightarrow 150\\
-        &n \rightarrow 140\\
-        &O \rightarrow 160\\
-        &o \rightarrow 160\\
-        &S \rightarrow 321\\
-        &s \rightarrow 321\\
-        &F \rightarrow 180\\
-        &Cl \rightarrow 345\\
-        &Br \rightarrow 789\\
-        &I \rightarrow 1259\\
-        &= \rightarrow -20\\
-        &\# \rightarrow -40\\
-        &+ \rightarrow 10\\
-        &1 \rightarrow -10\\
-        &2 \rightarrow -10\\
-        &3 \rightarrow -10\\
-        &4 \rightarrow -10\\
-        &5 \rightarrow -10\\
-        &6 \rightarrow -10
-    \end{align*}
-}
-%endregion
-
-%region Annex D
-\Annexe{Linear Regression Token to Weight Map}
-\label{annex:linreg-weight-estimation}
-
-Linear regression weight map to link grammar tokens to their respective estimated weight in Appendix D\@
-{
-    \allowdisplaybreaks
-    \begin{align*}
-        &C \rightarrow 140,\\
-        &c \rightarrow 130,\\
-        &N \rightarrow 148,\\
-        &n \rightarrow 144,\\
-        &O \rightarrow 161,\\
-        &o \rightarrow 158,\\
-        &S \rightarrow 338,\\
-        &s \rightarrow 319,\\
-        &F \rightarrow 180,\\
-        &Cl \rightarrow 346,\\
-        &Br \rightarrow 793,\\
-        &I \rightarrow 1259,\\
-        &= \rightarrow -13,\\
-        &\# \rightarrow -35,\\
-        &+ \rightarrow 11,\\
-        &- \rightarrow -1,\\
-        &1 \rightarrow -9,\\
-        &2 \rightarrow -9,\\
-        &3 \rightarrow -9,\\
-        &4 \rightarrow -9,\\
-        &5 \rightarrow -9,\\
-        &6 \rightarrow -9,\\
-        &( \rightarrow 1,\\
-        &) \rightarrow 1,\\
-        &[ \rightarrow -4,\\
-        &] \rightarrow -4,\\
-        &H \rightarrow 12,\\
-        &H2 \rightarrow 18,\\
-        &H3 \rightarrow 19,\\
-        &@ \rightarrow -3,\\
-        &/ \rightarrow -5,\\
-        &\backslash \rightarrow -9,
-    \end{align*}
-}
-%endregion
-
-
 
 % \begin{landscape}
 % \Annexe{Encore une annexe / Another Appendix}

@@ -112,9 +112,7 @@ Marginals-augmented constraint programming is the idea of guiding our branching 
     \label{fig:marginal_cp}
 \end{figure}
 
-%%% SubSubSection CPBP %%%
-% \subsubsection{Constraint Programming with Belief Propagation}
-One use of these marginals is to change standard constraint propagation to contain more information. Belief Propagation does this by modifying the message that constraints send variables. Instead of sending a message containing a binary representation of which values in the domain have a support, the messages are modified to communicate the probability of a value being contained within a solution as seen in Figure~\ref{fig:cpbp_messaging}. This allows the solver to avoid branching on values that have a very small chance of being valid.
+One use of these marginals is to change standard constraint propagation to contain more information. \gls{bp} does this by modifying the message that constraints send variables. Instead of sending a message containing a binary representation of which values in the domain have a support, the messages are modified to communicate the probability of a value being contained within a solution as seen in Figure~\ref{fig:cpbp_messaging}. This allows the solver to avoid branching on values that have a very small chance of being valid.
 
 
 
@@ -125,12 +123,11 @@ One use of these marginals is to change standard constraint propagation to conta
     \vbox to 4cm {
         \input{figures/fig:cpbp_messaging.tex}
     }
-    \caption[\acrlong{cpbp} messaging.]{Belief Propagation replaces standard constraint messages, which consist of a binary message indicating which values are supported in the domain, with a probabilistic distribution over the domain. As we can see, instead of communicating that the value $c$ for variable $X$ lacks a support, the blue constraint communicates that $X=c$ has a $0\%$ chance of being in a valid solution. This ensures that we can still communicate what values must be filtered out, but we also gain information on the other values in the domain.}
+    \caption[\acrlong{cpbp} messaging.]{\gls{bp} replaces standard constraint messages, which consist of a binary message indicating which values are supported in the domain, with a probabilistic distribution over the domain. As we can see, instead of communicating that the value $c$ for variable $X$ lacks a support, the blue constraint communicates that $X=c$ has a $0\%$ chance of being in a valid solution. This ensures that we can still communicate what values must be filtered out, but we also gain information on the other values in the domain.}
     \label{fig:cpbp_messaging}
 \end{figure}
 
 When multiple constraints interact on one variable, they each simultaneously communicate to the variable what they estimate the probability distribution to be. The variable then merges these probabilities into the final values as seen in Figure~\ref{fig:cpbp_combined}.
-
 
 
 \begin{figure}[ht]
