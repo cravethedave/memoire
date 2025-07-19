@@ -153,7 +153,7 @@ This constraint is considered to be symmetry-breaking since it avoids exploring 
 
 We represent this using a \regular\ constraint which ensures the variables it is placed upon respect a given automaton. The automaton defined in Figure~\ref{fig:cycleCountingAutomaton} ensures that, at any given state, we can freely place any cycle token already encountered. It also guarantees that only the next smallest cycle token can be used, excluding the ones already encountered, and using it transitions us to the next state.
 
-$$\regular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}).$$
+$$\regular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A})$$
 
 \begin{figure}[ht]
     \centering
@@ -192,6 +192,7 @@ $$\regular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}).$$
 
 
 \subsection{Structural Constraints}
+\label{sec:structural-constraints-definition}
 This section will present two constraints targeting specific structures in generated molecules. These constraints will be used to get samples of varying difficulty during our experiments. These constraints will never be used on their own, instead always being used in tandem with the validity constraints from Section~\ref{sec:validity-constraint-definition}.
 
 \subsubsection{Cycle Count Constraint}
@@ -219,6 +220,7 @@ $$
 
 
 \subsection{Molecular Property Constraints}
+\label{sec:property-constraints-definition}
 In this section, we answer our second research question: Can we use \acrshort{cp} to model desirable molecular properties in \acrshort{smiles} molecules?
 
 We previously talked about Lipinski's rule of five in Section~\ref{sec:lipinski-rules}. We will show how it is possible to describe each of these properties using constraints in our current model.
@@ -268,7 +270,7 @@ Atoms with a charge have a different number of Hydrogen atoms bonded to them.
 
 With this we create a weight array (Table~\ref{tab:token-weight-map}), ${\cal T}^w$,  indexed by token IDs.
 
-\begin{table}[ht]
+\begin{table}[H]
     \centering
     \begin{tabular}{c|c|c}
         Token & Human Weight & Linear Regression Weight\\
@@ -315,13 +317,13 @@ To apply this constraint, we first create weight variables, $W_i$, that will rep
 
 We link the values of these variables using the \element\ constraint. It uses the weight array previously defined, ${\cal T}^w$ as a lookup table and ensures that $W_i$ is the value associated to index $X_i$.
 
-Once these variables are defined, we can constrain the sum of the variable array $W$ to our desired estimated value. To respect Lipinski's rule of five, we would limit the value to 500 Daltons (in our model, we would instead use 5000 since we multiply values by 10 for more significant numbers).
+Once these variables are defined, we can constrain the sum, $S^w$, of the variable array, $W$, to our desired estimated value. To respect Lipinski's rule of five, we would limit the value to 500 Daltons (in our model, we would instead use 5000 since we multiply values by 10 for more significant numbers).
 
 
 \begin{align*}
     &\element({\cal T}^w, X_i, W_i)\ \forall\ i\ \vert\ 1 \leq i \leq n \\
-    &\somme(\langle W_1, W_2,\ldots,W_n \rangle, W) & & \\
-    &W \leq 500  & &
+    &\somme(\langle W_1, W_2,\ldots,W_n \rangle, S^w) & & \\
+    &S^w \leq 500  & &
 \end{align*}
 
 \paragraph{How accurate is this estimation?}
@@ -391,14 +393,13 @@ Once we have modified our grammar, it is simply a matter of limiting how many of
 To model the \emph{logP} value using only \gls{smiles} notation, another of Lipinski's rules, human ingenuity is not enough.
 
 \paragraph{Ridge Regression.}
-Basing ourselves on the work done previously by Vidal et al.~\cite{lingos}, use a linear regression to estimate the partial contribution, positive or negative, of sequences of four tokens (\emph{$4$-grams}) on the \emph{logP} score.
+Basing ourselves on the work done previously by Vidal et al.~\cite{lingos}, we use a linear regression to estimate the partial contribution, positive or negative, of sequences of four tokens (\emph{$4$-grams}) on the \emph{logP} score.
 In their work, they used a partial least squares regression to estimate the \emph{logP} value of different molecules.
 Their results indicate that their model could accurately predict \emph{logP} values.
 Similarly, we compute the partial contribution of every possible $4$-gram in the datasets by using a ridge regression (a linear regression where we add a small value to the input to avoid linearly dependant inputs).
 
 The accuracy of this model is very variable. We did a relative error analysis as well as an absolute error analysis as can be seen in Table~\ref{tab:lingo-error-analysis}.
 
-\gilles{Avez-vous des idées pour comment mieux présenter cette information? On a beaucoup de données aberrantes et nos résultats paraissent mauvais au départ, mais sans les données aberrantes c'est super bon comme estimation}
 \paragraph{Absolute Error Analysis.} The first thing to note is that the average error sits at $0.1235$, an acceptable value when we are targeting a \emph{logP} score under $5$. However, the maximum error is much bigger, at $2.2231$. To get a clearer message, we calculate the median error (\ie the second quartile) and find that it is lower than our average, at $0.0861$. We decide to exclude outliers in our data by using the IQR filtering method. This filters out $4.56\%$ of our data as outliers and gives us our new average: $0.1063$.
 
 \paragraph{Relative Error Analysis.} Relative error allows us to get a better picture by comparing the error to the targeted value instead of keeping an absolute scale. 
@@ -406,7 +407,7 @@ With an average error of $12.56\%$, our method doesn't seem too accurate.
 However, our maximum error of $108'851.38\%$ seems absurd.
 Upon further inspection, we found that we were getting these absurdly high relative errors on molecules with very small \emph{logP} scores (\ie smaller than $0.001$).
 Since the relative error has the true value as the denominator, this makes the relative error for this sample grow disproportionately.
-Once again, we look at the median value, which is less sensitive to outliers and find that it is four times smaller than our current average at $3.68\%$.
+Once again, we looked at the median value, which is less sensitive to outliers and find that it is four times smaller than our current average at $3.68\%$.
 To avoid falsifying our average with outliers, we filter our data using IQR filtering, filtering out $7.86\%$ of our data.
 This allows us to get a more reliable average of $4.54\%$ relative error, a very acceptable error rate for our estimations.
 
@@ -447,7 +448,7 @@ Our model then uses a \extensional\ constraint as defined below:
     &S^p \leq 5
 \end{align*}
 
-However, this table can potentially quite large (the number of terminal tokens elevated to the power 4), we limit its size through the use of a wildcard token ($\star$) and the \shortTable\ constraint~\cite{DBLP:conf/aaai/VerhaegheLS17}.
+However, this table can potentially be quite large (the number of terminal tokens elevated to the power 4), we limit its size through the use of a wildcard token ($\star$) and the \shortTable\ constraint~\cite{DBLP:conf/aaai/VerhaegheLS17}.
 
 \paragraph{Short Table Implementation.}
 Since a $\star$ token can represent any other token, we can use it to map large numbers of zero-weight $4$-grams to the appropriate weight.
@@ -462,11 +463,7 @@ The constraint definition doesn't change much, we replace the \extensional\ cons
     &S^p \leq 5
 \end{align*}
 
-Unfortunately during our testing, the \acrlong{bp} component of the \shortTable\ constraint resulted in strange molecules being generated. It would generate as small of a molecule as possible and seemed to lack the variety that previous tests had. 
-
-When we disable the \gls{bp} component of this constraint, we find more varied results that seem more natural based on what we have seen thus far in molecule datasets. However, \gls{bp} does significantly decrease the solving time as seen in Table~\ref{tab:logp-constraint-time-analysis}.
-
-We decide to try one final implementation using a \costregular\ constraint, hoping to get better results using the \gls{bp} of that constraint.
+This representation results in a number of constraints which grows linearly with the number of token variables. However, there is a way to represent this property by using a single \costregular\ constraint applied on the entire variable array $X$.
 
 % ShortCT Yes BP:
 % Constrain: 2.000 s
@@ -495,11 +492,50 @@ The transition to a $4$-gram state is associated to the partial contribution of 
 All other state transitions have a weight of 0 and all states in the automaton are considered valid final states.
 See Algorithm~\ref{algo:logp-regular} to see exactly how we create the transition and weight table for our automaton.
 
-The final automaton has $41'741$ states, a considerable reduction in size compared to the previous \shortTable\ constraint. However it has a slower solving time, as can be seen in Table~\ref{tab:logp-constraint-time-analysis}.
+The final automaton has $41'741$ states, a considerable reduction in size compared to the previous \shortTable\ constraint.
 
 \begin{align*}
-    &\costregular(\langle X_1, X_2, \ldots, X_n \rangle, {\cal T}_{A^p}, {\cal W}_{A^p}).
+    &\costregular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}^p, {\cal W}_{\mathcal{A}^p}).
 \end{align*}
+
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}
+        \tikzset{
+            ->, % makes the edges directed
+            node distance=2.5cm, % specifies the minimum distance between two nodes. Change if necessary.
+            every state/.style={thick, fill=gray!10}, % sets the properties for each ’state’ node
+            initial text=$ $, % sets the text that appears on the start arrow
+        }
+        \node[state, initial] (S) {start};
+        \node[state, right of=S] (s1) {a};
+        \node[state, right of=s1] (s2) {ab};
+        \node[state, right of=s2] (s3) {abb};
+        \node[state, right of=s3] (s4) {abba};
+
+        \draw
+            (S) edge[loop above] node{$\Sigma$:0} (S)
+            (S) edge[bend left=20, above] node{a:0} (s1)
+
+            (s1) edge[loop above] node{a:0} (s1)
+            (s1) edge[bend left=20, above] node{b:0} (s2)
+            (s1) edge[bend left=20, above] node{$\Sigma$:0} (S)
+
+            (s2) edge[bend left=20, above] node{a:0} (s1)
+            (s2) edge[above] node{b:0} (s3)
+            (s2) edge[bend left=40, above] node{$\Sigma$:0} (S)
+
+            (s3) edge[above] node{a:\textcolor{red}{2.4}} (s4)
+            (s3) edge[bend left=50, above] node{$\Sigma$:0} (S)
+            
+            (s4) edge[bend right=50, above] node{a:0} (s1)
+            (s4) edge[bend right=40, above] node{b:0} (s2)
+            (s4) edge[bend left=60, above] node{$\Sigma$:0} (S)
+        ;
+    \end{tikzpicture}
+    \caption[Simplified example of automaton $\mathcal{A}^p$, associating a weight to a sequence during generation.]{Simplified example of automaton $\mathcal{A}^p$, associating a weight to a sequence during generation. This example associates a weight of $2.4$ to the $4$-gram \textbf{\texttt{abba}}. For clarity and simplicity, we limit ourselves to one sequence as the graph quickly becomes very connected. The only transition that has an associated weight is the one that completes the $4$-gram. Each state has a transition back to the start state in the case where it receives a token that is in the alphabet ($\Sigma$) but does not have its own state. For all transitions that have $\Sigma$ associated to them, we assume any tokens that are in another transition are excluded from $\Sigma$.}
+    \label{fig:costregular-constraint-automaton}
+\end{figure}
 
 \begin{algorithm}[]
     \caption{\textbf{regularAutomatonCreation}$(N,w,g)$}
@@ -519,51 +555,35 @@ The final automaton has $41'741$ states, a considerable reduction in size compar
 
     \tcp{Find all relevant states from our $4$-grams}
     \ForEach{$\mathsf{ngram} \; \in N$} {
-        $\mathsf{s} \gets ``"$\;
+        $\mathsf{state} \gets ``"$\;
+        \tcp{Add each partial sequence of the $4$-gram to the state set}
         \ForEach{$\mathsf{token} \; \in \mathsf{ngram}$} {
-            $\mathsf{s} \gets s + t$\;
-            $\mathsf{S} \gets \mathsf{S} \cup \mathsf{s}$\;
+            $\mathsf{state} \gets \mathsf{state} + \mathsf{token}$\;
+            $\mathsf{S} \gets \mathsf{S} \cup \mathsf{state}$\;
         }
     }
 
     \tcp{Fill the transition and weight matrix}
-    \ForEach{$\mathsf{s} \; \in S$} {
-        \ForEach{$\mathsf{t} \; \in g$} {
+    \ForEach{$\mathsf{state} \; \in \mathsf{S}$} {
+        \ForEach{$\mathsf{token} \; \in g$} {
             \tcp{Define the next state as the current state's last three tokens plus the given token}
-            $\mathsf{s'} \gets s[1:] + \mathsf{t}$\;
+            $\mathsf{state'} \gets \mathsf{state}[1:] + \mathsf{token}$\;
             \tcp{Remove the first token from the next state until we find a valid transition state. This will always default to the start state $``"$ if nothing is found.}
-            \While{$\mathsf{s'} \notin S$} {
-                $\mathsf{s'} \gets s'[1:]$\;
+            \While{$\mathsf{state'} \notin \mathsf{S}$} {
+                $\mathsf{state'} \gets \mathsf{state'}[1:]$\;
             }
-            ${\cal T}_{A^p}[s][t] \gets \mathsf{s'}$\;
-            \If{$len(\mathsf{s'}) = 4$} {
-                ${\cal W}_{A^p}[s][t] \gets w[s]$\;
+            ${\cal T}_{A^p}[\mathsf{state}][\mathsf{token}] \gets \mathsf{state'}$\;
+            \If{$\mathsf{\textbf{len}}(\mathsf{state'}) = 4$} {
+                ${\cal W}_{A^p}[\mathsf{state}][\mathsf{t}] \gets w[\mathsf{state}]$\;
             }
         }
     }
-
     \Return (${\cal T}_{A^p}$, ${\cal W}_{A^p}$)\;
 \end{algorithm}
 
-\begin{table}[H]
-    \centering
-    \begin{tabular}{|c|c|c|}
-        \cline{2-3}
-        \multicolumn{1}{c|}{} & \textbf{Constraint Placement Time (s)} & \textbf{Solve Time (s)}\\
-        \hline
-        \shortTable\ with \gls{bp} & 2.000 & 9.442 \\
-        \hline
-        \shortTable\ without \gls{bp} & 1.968 & 37.876 \\
-        \hline
-        \regular & 2.844 & 50.971 \\
-        \hline
-    \end{tabular}
-    \caption[Time comparison between different implementations of the \emph{logP} estimation constraint]{Time comparison between different implementations of the \emph{logP} estimation constraint.}
-    \label{tab:logp-constraint-time-analysis}
-\end{table}
-
 
 \section{Experiments}
+\label{sec:valid-experiments}
 In the previous section, we've answered our first two research questions:
 
 \begin{enumerate}
@@ -594,7 +614,7 @@ This will slow down the total time required for our algorithms to run.
 
 \section{Results}
 
-\begin{table}[]
+\begin{table}[H]
     \centering
     \begin{tabular}{crrrrrr}
     \hline
@@ -616,5 +636,32 @@ This will slow down the total time required for our algorithms to run.
     \label{tab:results}
 \end{table}
 
+
+
+\david{Move this to when we compare LogP estimation constraint}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \cline{2-4}
+        \multicolumn{1}{c|}{} & \textbf{Initial Setup (s)} & \textbf{Solve Time (s)} & \text{Failures}\\
+        \hline
+        \shortTable\ with \gls{bp} & $10.707$ & $1.168$ & $13$\\
+        \hline
+        \shortTable\ without \gls{bp} & $17.670$ & $24.116$ & $111$\\
+        \hline
+        \regular & $31.917$ & $20.944$ & $4$ \\
+        \hline
+    \end{tabular}
+    \caption[Performance comparison between different implementations of the \emph{logP} estimation constraint]{Performance comparison between different implementations of the \emph{logP} estimation constraint. The addition of \gls{bp} clearly reduces the number of failures before a solution is found.}
+    \label{tab:logp-constraint-time-analysis}
+\end{table}
+
+Unfortunately during our testing, the \acrlong{bp} component of the \shortTable\ constraint resulted in strange molecules being generated. It would generate as small of a molecule as possible and seemed to lack the variety that previous tests had. 
+
+When we disable the \gls{bp} component of this constraint, we find more varied results that seem more natural based on what we have seen thus far in molecule datasets. However, \gls{bp} does significantly decrease the solving time as seen in Table~\ref{tab:logp-constraint-time-analysis}.
+
+\david{About the regular constraint as opposed to the shortTable}
+However it has a slower solving time, as can be seen in Table~\ref{tab:logp-constraint-time-analysis}.
 
 \end{document}

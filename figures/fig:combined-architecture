@@ -1,0 +1,136 @@
+\begin{tikzpicture}[
+        font=\sffamily\small,
+        % >=Latex,
+        every node/.style={align=center},
+        histogram/.style={
+            rectangle,
+            draw,
+            minimum width=0.25cm,
+            minimum height=0.3cm,
+            path picture={
+                \draw[black] (path picture bounding box.south west) -- ++(0,0.15) -- ++(0.05, -0.15);
+                \draw[black] ([xshift=0.1cm]path picture bounding box.south west) -- ++(0,0.25) -- ++(0.05, -0.25);
+                \draw[black] ([xshift=0.2cm]path picture bounding box.south west) -- ++(0,0.2) -- ++(0.05, -0.2);
+            }
+        }
+    ]
+        % Neural Network block
+        \node[fill=gray!30, minimum width=5.5cm, minimum height=1.2cm, rounded corners=10pt] (nn) { \dots\ $X_{t-1}, X_t, X_{t+1}$ \dots };
+        % CP label
+        \node[left=-0.75 of nn, yshift=22] (nn-label) {\textbf{NN}};
+
+        % CP block
+        \node[fill=orange!30, minimum width=3.5cm, minimum height=1.8cm, rounded corners=10pt, below=1 of nn] (cp) {
+            % \textbf{\textcolor{orange}{CP}} \\[2pt]
+            $X_1 = x_1 \dots X_{t-1} = x_{t-1}$\\[2pt]
+            oracle($X_t$, \hspace{16pt} )\\[6pt]
+            $C(X_1,\dots,X_n)$
+        };
+        % CP label
+        \node[left=0 of cp, yshift=30] (cp-label) {\textcolor{orange!50}{\textbf{CP}}};
+
+        % BP gears
+        \node[right=0.5 of cp,minimum height=2cm] (bp-gears) {
+            \def\gearColor{green!90!black}
+            \begin{tikzpicture}
+                \node[] (left-gear) {\scalebox{0.15}{\input{figures/fig:gear.tex}}};
+                \node[right=-0.4 of left-gear, yshift=5] (right-gear) {\scalebox{0.1}{\input{figures/fig:gear.tex}}};
+                \node[above=-1.3 of left-gear,xshift=-5] {\textcolor{\gearColor}{\textbf{BP}}};
+            \end{tikzpicture}
+        };
+
+        % CP box
+        \draw[dashed] (cp-label.north west) rectangle (bp-gears.south east);
+
+        % Inner histogram
+        \node[right=-1.95 of cp, yshift=3] (in-hist) {
+            \tikz{
+                \fill[blue,thick] (0,0) rectangle (0.15,0.25);
+                \fill[blue,thick] (0.2,0) rectangle (0.35,0.5);
+                \fill[blue,thick] (0.4,0) rectangle (0.55,0.4);
+                \fill[blue,thick] (0.6,0) rectangle (0.75,0.15);
+            }
+        };
+
+        % Left histogram
+        \node[left=0.75 of cp, yshift=-3] (left-hist) {
+            \tikz{
+                \fill[blue,thick] (0,0) rectangle (0.15,0.25);
+                \fill[blue,thick] (0.2,0) rectangle (0.35,0.5);
+                \fill[blue,thick] (0.4,0) rectangle (0.55,0.4);
+                \fill[blue,thick] (0.6,0) rectangle (0.75,0.15);
+            }
+        };
+
+        % Right histogram
+        \node[right=0.5 of bp-gears, yshift=0] (right-hist) {
+            \tikz{
+                \fill[blue,thick] (0,0) rectangle (0.15,0.5);
+                \fill[blue,thick] (0.2,0) rectangle (0.35,0);
+                \fill[blue,thick] (0.4,0) rectangle (0.55,0.35);
+                \fill[blue,thick] (0.6,0) rectangle (0.75,0.25);
+            }
+        };
+
+        % Sample gears
+        \node[above=0.25 of right-hist,minimum height=2cm] (sample-gears) {
+            \def\gearColor{black}
+            \begin{tikzpicture}
+                \node[] (left-gear) {\scalebox{0.15}{\input{figures/fig:gear.tex}}};
+                \node[right=-0.4 of left-gear, yshift=5] (right-gear) {\scalebox{0.10}{\input{figures/fig:gear.tex}}};
+                \node[above=-1.3 of left-gear,xshift=-5] {\textcolor{\gearColor}{\textbf{Sample}}};
+            \end{tikzpicture}
+        };
+
+        % NN to Left
+        \draw[->, blue, thick]
+            (nn.east) ++ (-0.1,0)
+            -- ++ (0.2,0)
+            -- ++ (0,-0.85) coordinate (midpoint)
+            -- (left-hist.north |- midpoint)
+            -- (left-hist.north)
+        ;
+
+        % Left to In
+        \draw[->, blue, thick]
+            (left-hist.east |- in-hist.south) ++ (-0.2,-0.05) coordinate (firstpoint)
+            -- (in-hist.south |- firstpoint)
+            -- ++ (0,0.2)
+        ;
+
+        % Cp to BP
+        \draw[->, blue, thick]
+            (cp.east |- bp-gears.west) ++ (0,-0.2) coordinate (firstpoint)
+            -- (bp-gears.west |- firstpoint) -- ++ (0.4,0)
+        ;
+
+        % BP to Right
+        \draw[->, blue, thick]
+            (bp-gears.east) ++ (-0.3,-0.2) coordinate (firstpoint)
+            -- (right-hist.west |- firstpoint)
+        ;
+
+        % Right to Sample
+        \draw[->, blue, thick]
+            (right-hist.north) ++ (0.05,0) coordinate (firstpoint)
+            -- (firstpoint |- sample-gears.south) -- ++ (0,0.75)
+        ;
+
+        % Sample to nn
+        \draw[->, black, thick]
+            (sample-gears.north) ++ (0,-1)
+            -- ++ (0,1) coordinate (midpoint)
+            -- (nn.west |- midpoint)
+            node[pos=0.5, above]{New sequence}
+            -- ++ (-0.25,0) coordinate (finalturn)
+            -- (finalturn |- nn.west)
+            -- (nn.west)
+        ;
+
+        % Start to nn
+        \draw[->, black, thick]
+            (nn.west) ++ (-2.5,0)
+            -- (nn.west)
+            node[pos=0.45, above]{Start token}
+        ;
+    \end{tikzpicture}
