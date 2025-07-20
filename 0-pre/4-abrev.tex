@@ -1,25 +1,16 @@
-\documentclass[../Document.tex]{subfiles}
-\graphicspath{{\subfix{../images/}}}
-
-\begin{document}
-
-
 % Liste des sigles et abbréviations / List of symbols and acronyms
 \ifthenelse{\equal{\Langue}{english}}{
 	\newcommand\abbrevname{LIST OF SYMBOLS AND ACRONYMS}
 }{
 	\newcommand\abbrevname{LISTE DES SIGLES ET ABRÉVIATIONS}
 }
-\chapter*{\abbrevname}
-\addcontentsline{toc}{compteur}{\abbrevname}
-\pagestyle{pagenumber}
 
 \begingroup
-\let\clearpage\relax
-\glsaddall
-% \printglossary[type=\acronymtype, title={}, numbered=false]
-\printglossary[type=\acronymtype, title={}]
+	\let\clearpage\relax
+	\chapter*{\abbrevname}
+
+	\addcontentsline{toc}{compteur}{\abbrevname}
+	\pagestyle{pagenumber}
+
+	\printglossary[type=\acronymtype, title={}]
 \endgroup
-
-
-\end{document}

@@ -7,5 +7,32 @@
     "cSpell.words": [
         "nonterminal",
         "nonterminals"
-    ]
+    ],
+    // "latex-workshop.latex.tools": [
+    //     {
+    //         "name": "pdflatex",
+    //         "command": "pdflatex",
+    //         "args": [
+    //             "-interaction=nonstopmode",
+    //             "-synctex=1",
+    //             "%DOC%"
+    //         ]
+    //     },
+    //     {
+    //         "name": "makeglossaries",
+    //         "command": "makeglossaries",
+    //         "args": [ "%DOCFILE%" ]
+    //     }
+    // ],
+    // "latex-workshop.latex.recipes": [
+    //     {
+    //         "name": "pdflatex -> bibtex -> makeglossaries -> pdflatex x2",
+    //         "tools": [
+    //             "pdflatex",
+    //             "makeglossaries",
+    //             "pdflatex"
+    //         ]
+    //     }
+    // ],
+    // "latex-workshop.latex.autoBuild.run": "never"
 }

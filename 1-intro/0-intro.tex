@@ -21,17 +21,17 @@ Automated molecule design is nowadays a vital part of drug discovery and materia
 It aims to extract from this huge design space the most likely candidates according to some desired properties.
 Even among these, only a few may lead to a usable product after extensive testing.
 
-\gls{smiles}, a one-dimensional encoding of molecules, is one of the standards commonly used by this research community.
+\smiles, a one-dimensional encoding of molecules, is one of the standards commonly used by this research community.
 It lends itself well to techniques used for \gls{nlp}, such as sequential generative neural models.
 \glspl{llm} in particular have come to the forefront of popular attention as impressive tools for generating text.
-However, this generation isn't limited to purely human languages as we can train the model on another text format, such as \gls{smiles}, and get a model capable of generating molecules.
+However, this generation isn't limited to purely human languages as we can train the model on another text format, such as \smiles, and get a model capable of generating molecules.
 
-\gls{smiles} also lends itself very well to \gls{cp}. \gls{cp} seems like a natural approach to molecule discovery since it allows hard constraints to be placed which could ensure only valid molecules are generated.
-Using a \gls{cfg} and a few additional constraints could allow us to describe valid \gls{smiles} strings in a \gls{cp} model.
-We also believe it may be possible to model desirable molecular properties using \gls{cp}, this would allow our model to restrict its search even further.
+\smiles also lends itself very well to \cp. \cp seems like a natural approach to molecule discovery since it allows hard constraints to be placed which could ensure only valid molecules are generated.
+Using a \gls{cfg} and a few additional constraints could allow us to describe valid \smiles strings in a \cp model.
+We also believe it may be possible to model desirable molecular properties using \cp, this would allow our model to restrict its search even further.
 This allows us to explore the huge design space of possible molecules while adding constraints in order to restrict that space to suitable candidates.
 
-This \gls{cp} approach, which excels at imposing hard rules and long-term structure while lacking the informed decision making that trained models gain from the dataset used, could allow us to answer one of the issues with sequence models in \gls{ml}.
+This \cp approach, which excels at imposing hard rules and long-term structure while lacking the informed decision making that trained models gain from the dataset used, could allow us to answer one of the issues with sequence models in \gls{ml}.
 Often times, these models struggle to exhibit long-term structure, stemming in part from the token-by-token nature of the prediction process used to generate a sequence.
 In other words, these models do not explicitly learn the hard rules that determine validity nor desirability and merely mimic what was observed.
 
@@ -67,17 +67,17 @@ This combination of both techniques could lead to valid, realistic and property-
 
 As mentioned previously, drug discovery is both time-consuming and costly and automated drug discovery has been an important field of research to reduce these costs.
 While \gls{ml} methods have been gaining a lot of popularity in the field, those techniques suffer from a lack of long-term structure.
-To address this, \gls{cp} is a natural answer since it provides the lacking long-term structure.
-\david{Cite works using CP could help}
-However, while \gls{cp} is used in the domain, there isn't much work \david{I found none, but to be investigated further} relating to generating molecule candidates using \gls{cp}.
+To address this, \cp is a natural answer since it provides the lacking long-term structure.
 
-We believe that a \gls{cp} model would be beneficial and would reduce the number of invalid molecules generated.
+However, while \cp is used in the domain, there isn't much work relating to generating molecule candidates using \cp, we will discuss what we did find in our literature review at Chapter~\ref{chap:lit-review}.
 
-More importantly however, a \gls{cp} model that generates valid molecules could then be used to target property-specific molecules using constraints to eliminate undesirable options.
+We believe that a \cp model would be beneficial and would reduce the number of invalid molecules generated.
 
-The issue of using \gls{cp} for this problem is the size of the search space to explore. By using \gls{bp}, we believe that the search will be better guided towards a solution and require less backtracking. However, it remains to be seen if the added cost for the \gls{bp} increases the overall time to solve.
+More importantly however, a \cp model that generates valid molecules could then be used to target property-specific molecules using constraints to eliminate undesirable options.
 
-Finally, we believe that by combining a trained token-by-token generating \gls{ml} model with our \gls{cpbp} model, we might get molecules similar to what is being used today (molecules in datasets) while still maintaining the long-term structure of the \gls{cp} model.
+The issue of using \cp for this problem is the size of the search space to explore. By using \bp, we believe that the search will be better guided towards a solution and require less backtracking. However, it remains to be seen if the added cost for the \bp increases the overall time to solve.
+
+Finally, we believe that by combining a trained token-by-token generating \gls{ml} model with our \gls{cpbp} model, we might get molecules similar to what is being used today (molecules in datasets) while still maintaining the long-term structure of the \cp model.
 
 
 \section{Research Questions}
@@ -98,10 +98,8 @@ The rest of this thesis is organized in the following chapters:
 \begin{itemize}
     \item Chapter \ref{chap:background} goes over the necessary concepts to understand the rest of the paper.
     \item Chapter \ref{chap:lit-review} provides a general overview of the different techniques currently in use.
-    \item Chapter \ref{chap:cp-validity} presents our base model as well as the methods used to model valid molecules as per our first research question.
-    \item Chapter \ref{chap:cp-properties} expands on the previous section and introduces ways to model molecular properties using \acrshort{cp}. This section addresses our second research question.
-    \item Chapter \ref{chap:gpt+cp} details how we combine our \acrshort{cp} model 
-    with a \acrshort{nlp} model.
+    \item Chapter \ref{chap:cp-validity} presents our base \cp model as well as constraints to represent: validity, structure and desirable molecular properties. This will address our first three research questions.
+    \item Chapter \ref{chap:gpt+cp} details how we combine our \acrshort{cp} model with a \acrshort{nlp} model. This will answer our fourth research question and add some details to our third one.
     \item Chapter \ref{chap:conclusion} goes over the paper's contributions, its limitations and potential ways to improve this in future work.
 \end{itemize}
 

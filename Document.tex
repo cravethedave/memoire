@@ -8,9 +8,8 @@
 
 %% Support des acronymes. / Support for acronyms.
 \usepackage[acronym]{glossaries}
+\usepackage{xspace}
 \makeglossaries
-
-\input{acronyms}
 
 %%
 %%  Gabarit bilingue de mémoire de maîtrise ou thèse de doctorat.
@@ -26,36 +25,29 @@
 %% Supports accented characters in the document (UTF-8).
 
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=2pt](char) {#1};}}
-\newcommand{\constraint}[1]{\mbox{\sc #1}}
+\newcommand{\constraint}[1]{\mbox{\sc #1}\xspace}
+
+\newcommand{\among}{\constraint{Among}}
+\newcommand{\costregular}{\constraint{CostRegular}}
+\newcommand{\element}{\constraint{Element}}
 \newcommand{\extensional}{\constraint{Table}}
+\newcommand{\oracle}{\constraint{Oracle}}
+\newcommand{\regular}{\constraint{Regular}}
 \newcommand{\shortTable}{\constraint{ShortTable}}
 \newcommand{\somme}{\constraint{Sum}}
-\newcommand{\alldiff}{\constraint{AllDifferent}}
-\newcommand{\regular}{\constraint{Regular}}
-\newcommand{\costregular}{\constraint{CostRegular}}
+
 \newcommand{\grammar}{\constraint{Cfg}}
-\newcommand{\mdd}{\constraint{Mdd}}
-\newcommand{\exactly}{\constraint{Exactly}}
-\newcommand{\atmost}{\constraint{AtMost}}
-\newcommand{\gcc}{\constraint{Gcc}}
-\newcommand{\among}{\constraint{Among}}
-\newcommand{\element}{\constraint{Element}}
-\newcommand{\inverse}{\constraint{Inverse}}
-\newcommand{\lexless}{\constraint{LexLess}}
-\newcommand{\oracle}{\constraint{Oracle}}
-\newcommand{\alldiffMod}{\constraint{AllDifferent\_modulo}}
-\newcommand{\maxMod}{\constraint{Maximum\_modulo}}
-\newcommand{\amongMod}{\constraint{Among\_modulo}}
-\newcommand{\cp}{{\sc cp}}
-\newcommand{\bp}{{\sc bp}}
-\newcommand{\csp}{{\sc csp}}
-\newcommand{\sat}{{\sc sat}}
-\newcommand{\mip}{{\sc mip}}
-\newcommand{\ai}{{\sc ai}}
+
+\newcommand{\bp}{\gls{bp}\xspace}
+\newcommand{\cp}{\gls{cp}\xspace}
+\newcommand{\cpbp}{\gls{cpbp}\xspace}
+\newcommand{\csp}{\gls{csp}\xspace}
+\newcommand{\nn}{\gls{nn}\xspace}
+\newcommand{\smiles}{\gls{smiles}\xspace}
 
 \usepackage{todonotes}
 \newcommand{\david}[1]{\todo[inline,color=cyan]{{\bf Do this:} #1}}
-\newcommand{\comment}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
+\newcommand{\commented}[1]{\todo[inline,color=cyan]{{\bf Gilles commented:} #1}}
 \newcommand{\gilles}[1]{\todo[inline,color=green]{{\bf @Gilles, I have a question:} #1}}
 \usepackage{booktabs}
 \usepackage{soul}
@@ -202,6 +194,8 @@
 
 \usepackage{subfiles}
 
+\input{acronyms}
+
 \begin{document}
 \bstctlcite{IEEEexample:BSTcontrol}
 
@@ -324,7 +318,7 @@ a été dûment accepté\ifthenelse{\equal{\monDiplome}{M}}{}{e} par le jury d'e
 
 
 % Liste des sigles et abréviations.
-\subfile{0-pre/4-abrev.tex}
+\include{0-pre/4-abrev.tex}
 
 
 % \ifthenelse{\equal{\AnnexesPresentes}{O}}{\listofappendices}{}
@@ -335,9 +329,9 @@ a été dûment accepté\ifthenelse{\equal{\monDiplome}{M}}{}{e} par le jury d'e
 \subfile{1-intro/0-intro.tex}
 
 % Background
-\subfile{2-background/0-background.tex}
+% \subfile{2-background/0-background.tex}
 
- % Revue de littérature / Literature review
+% Revue de littérature / Literature review
 \subfile{3-review/0-review.tex}
 
 % Premier thème (Doctorat) ou "Détails de la Solution" (Maîtrise) / First topic (PhD) or "Details of the Solution" (Master's).

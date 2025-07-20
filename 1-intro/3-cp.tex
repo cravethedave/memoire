@@ -6,17 +6,17 @@
 
 \section{Constraint Programming}
 \label{sec:intro/cp}
-\acrlong{cp} is a complete, heuristic guided search method which excels at ensuring the respect of constraints while generating a solution. It is complete in that if a solution exists in a given search space, a \gls{cp} model is guaranteed to find it. By using heuristics as well as constraint propagation (more on that later), it can be much faster than a simple brute force of all possible solutions.
+\acrlong{cp} is a complete, heuristic guided search method which excels at ensuring the respect of constraints while generating a solution. It is complete in that if a solution exists in a given search space, a \cp model is guaranteed to find it. By using heuristics as well as constraint propagation (more on that later), it can be much faster than a simple brute force of all possible solutions.
 
-% We will first define how a simple \gls{cp} model functions: its definition, the declaration of constraints, the constraint propagation, the branching decisions, error detection and management.
-We will first define how a simple \gls{cp} model functions. We will cover the initial problem declaration, the constraint declaration to describe the problem and finally the solving process and its intricacies (constraint propagation, branching decisions, backtracking).
+% We will first define how a simple \cp model functions: its definition, the declaration of constraints, the constraint propagation, the branching decisions, error detection and management.
+We will first define how a simple \cp model functions. We will cover the initial problem declaration, the constraint declaration to describe the problem and finally the solving process and its intricacies (constraint propagation, branching decisions, backtracking).
 Once that is covered, we can expand on this topic by introducing \gls{cpbp}
 \david{cite BP from original paper}
 which is an improvement over standard constraint propagation and leads to more informed decisions. We use \gls{cpbp} in our work since it tends to yield better results and allows for the combination with a \gls{ml} model as we will describe later.
 
 %%% SubSection Base Model Definition %%%
 \subsection{Constraint Satisfaction Problem}
-A \gls{csp} is defined in three parts:
+A \csp is defined in three parts:
 \begin{itemize}
     \item The variables making up the problem, defined as the finite set $\mathcal{X}$
     \item The domains of these variables, defined as a finite set of values $D$. Each variable can have its own domain
@@ -25,7 +25,7 @@ A \gls{csp} is defined in three parts:
 
 There are a finite number of \textbf{variables} defined in the set $\mathcal{X}$. Each of these variables has its own \textbf{domain} as is defined in the set $D$, which contains the possible values that a variable may take on. Finally, we define a finite number of \textbf{constraints}, each of which is applied on a subset of the variables. Each variable must then be assigned a value from its domain such that it respects all the applied constraints. If such an assignment is possible for all the variables, that is a solution to the problem.
 
-If we take the Sudoku problem as an example, a classic and very commonly seen problem, we can define it as a \gls{csp} as follows.
+If we take the Sudoku problem as an example, a classic and very commonly seen problem, we can define it as a \csp as follows.
 Our \textbf{variables} will be each tile in the 9x9 grid. While this gives us the layout of our problem, we must define the possible values for each variable to be able to solve this problem.
 All the variables can take on the same values and so we can define the \textbf{domain} as being the integer values between 1 and 9 inclusively. 
 
@@ -38,7 +38,7 @@ We could represent this using a 2-dimensional array of variables like so:
 All that is missing are the constraints, which are the source of the complexity of the problem.
 
 The \textbf{constraints} in a Sudoku are fairly straightforward, lines, columns and all 3x3 sub-grids within the total grid may not contain any repeat values.
-In the \gls{cp} community, this type of constraint is very common and is called an \texttt{alldifferent} constraint. The Sudoku problem would therefore have the following constraints:
+In the \cp community, this type of constraint is very common and is called an \texttt{alldifferent} constraint. The Sudoku problem would therefore have the following constraints:
 
 \begin{gather*}
     \texttt{alldifferent}(tile[1][j], tile[2][j], \dots, tile[9][j])\ \forall\ j \mid j \in \{1,2,\dots,9\} \\
@@ -50,7 +50,7 @@ In the \gls{cp} community, this type of constraint is very common and is called 
     )\ \forall\ u,v \mid u,v \in \{0,1,2\}
 \end{gather*}
 
-Overall, we would need 81 variables to define this \gls{csp} as well as 27 constraints. Each of our variables could take on any of the 9 possible values in their domain.
+Overall, we would need 81 variables to define this \csp as well as 27 constraints. Each of our variables could take on any of the 9 possible values in their domain.
 
 %%% SubSection Domain Filtering %%%
 \subsection{Domain Filtering}
@@ -112,7 +112,7 @@ Marginals-augmented constraint programming is the idea of guiding our branching 
     \label{fig:marginal_cp}
 \end{figure}
 
-One use of these marginals is to change standard constraint propagation to contain more information. \gls{bp} does this by modifying the message that constraints send variables. Instead of sending a message containing a binary representation of which values in the domain have a support, the messages are modified to communicate the probability of a value being contained within a solution as seen in Figure~\ref{fig:cpbp_messaging}. This allows the solver to avoid branching on values that have a very small chance of being valid.
+One use of these marginals is to change standard constraint propagation to contain more information. \bp does this by modifying the message that constraints send variables. Instead of sending a message containing a binary representation of which values in the domain have a support, the messages are modified to communicate the probability of a value being contained within a solution as seen in Figure~\ref{fig:cpbp_messaging}. This allows the solver to avoid branching on values that have a very small chance of being valid.
 
 
 
@@ -123,7 +123,7 @@ One use of these marginals is to change standard constraint propagation to conta
     \vbox to 4cm {
         \input{figures/fig:cpbp_messaging.tex}
     }
-    \caption[\acrlong{cpbp} messaging.]{\gls{bp} replaces standard constraint messages, which consist of a binary message indicating which values are supported in the domain, with a probabilistic distribution over the domain. As we can see, instead of communicating that the value $c$ for variable $X$ lacks a support, the blue constraint communicates that $X=c$ has a $0\%$ chance of being in a valid solution. This ensures that we can still communicate what values must be filtered out, but we also gain information on the other values in the domain.}
+    \caption[\acrlong{cpbp} messaging.]{\bp replaces standard constraint messages, which consist of a binary message indicating which values are supported in the domain, with a probabilistic distribution over the domain. As we can see, instead of communicating that the value $c$ for variable $X$ lacks a support, the blue constraint communicates that $X=c$ has a $0\%$ chance of being in a valid solution. This ensures that we can still communicate what values must be filtered out, but we also gain information on the other values in the domain.}
     \label{fig:cpbp_messaging}
 \end{figure}
 

@@ -79,7 +79,7 @@ We will present different one-dimensional encodings used in the molecule discove
         [C][=C][Ring1][Branch2][C][=Branch1][C][=O][O]\\
         \hline
     \end{tabular}
-    \caption[Different encodings of the molecule shown in Figure~\ref{fig:complex_smiles}]{Different encodings of the molecule shown in Figure~\ref{fig:complex_smiles}. DeepSMILES could not originally encode the \gls{smiles} string, we converted the molecule to canon \gls{smiles} for it to encode it correctly.}
+    \caption[Different encodings of the molecule shown in Figure~\ref{fig:complex_smiles}]{Different encodings of the molecule shown in Figure~\ref{fig:complex_smiles}. DeepSMILES could not originally encode the \smiles string, we converted the molecule to canon \smiles for it to encode it correctly.}
     \label{tab:different_encodings}
 \end{table}
 
@@ -87,42 +87,42 @@ We will present different one-dimensional encodings used in the molecule discove
 \gls{inchi} is a notation standard introduced by the \gls{iupac}~\cite{inchi_intro}. It provides a unique one-dimensional representation of the molecule. The encoding contains information on both the structure and certain properties of the molecule. This representation was not adopted by the automated molecule discovery research community because of its low readability by both humans and machines. Instead, it has become commonly used in indexing and searching tasks (\eg databases).
 
 \subsubsection{\acrshort{smiles}}
-\gls{smiles} is a one-dimensional string representation for molecular encoding~\cite{smiles_intro}. This encoding is much simpler than \gls{inchi}, only maintaining the structural information required to reconstruct the molecule. However, any lost information can be recovered using different techniques. Admittedly, the process can be difficult and time-intensive to guarantee accurate results.
+\smiles is a one-dimensional string representation for molecular encoding~\cite{smiles_intro}. This encoding is much simpler than \gls{inchi}, only maintaining the structural information required to reconstruct the molecule. However, any lost information can be recovered using different techniques. Admittedly, the process can be difficult and time-intensive to guarantee accurate results.
 \david{Get sources showing which ppl do this}
 
-If we picture a molecule as a graph where every vertex is an atom, a \gls{smiles} string would be the order in which we explore a tree-representation of the graph using a \gls{dfs}.
-Since \gls{smiles} is a \gls{dfs} over a tree, any cyles that were in the original graph would be lost. Thankfully, \gls{smiles} considers this by designating a specific token to represent broken cycle bonds. This prevents losing the cycles when we convert the graph into a tree. These tokens are represented by number tokens as seen in Figure~\ref{fig:complex_smiles}B and, later, in D.
+If we picture a molecule as a graph where every vertex is an atom, a \smiles string would be the order in which we explore a tree-representation of the graph using a \gls{dfs}.
+Since \smiles is a \gls{dfs} over a tree, any cyles that were in the original graph would be lost. Thankfully, \smiles considers this by designating a specific token to represent broken cycle bonds. This prevents losing the cycles when we convert the graph into a tree. These tokens are represented by number tokens as seen in Figure~\ref{fig:complex_smiles}B and, later, in D.
 Similarly, when we reach a branching path in the tree, one side is chosen as the main branch, which is shown in green in Figure~\ref{fig:complex_smiles}C, while the other side is written between parentheses to indicate that it is a branch.
 
-A very common concept in organic chemistry is aromatic rings. These are usually 5 or 6 atoms in a ring, the ring bonds alternate between single and double bonds. Due to their frequency, the \gls{smiles} language has started using a shorthand for it by writing atoms in aromatic rings using lowercase letters. This allows us to omit the alternating single and double bonds during writing and makes aromatic rings much more visible when reading a molecule.
-Kekulized \gls{smiles} keeps these bonds explicit, but non-kekulized \gls{smiles} is preferred.
+A very common concept in organic chemistry is aromatic rings. These are usually 5 or 6 atoms in a ring, the ring bonds alternate between single and double bonds. Due to their frequency, the \smiles language has started using a shorthand for it by writing atoms in aromatic rings using lowercase letters. This allows us to omit the alternating single and double bonds during writing and makes aromatic rings much more visible when reading a molecule.
+Kekulized \smiles keeps these bonds explicit, but non-kekulized \smiles is preferred.
 
 This encoding has gained a lot of popularity in the automated molecule discovery research community due to its age and ease of readability. Since its introduction, it has become the most popular string representation in automated discovery.
-However it comes with certain issues that we must address. Unlike \gls{inchi}, \gls{smiles} does not offer a unique encoding for each molecule. It is therefore possible to generate two different strings that describe the same molecule.
-Another prominent issue is linked to \gls{smiles}' special tokens. By requiring an opening token, as is needed to describe cycles, branches and isotopes (which we did not describe), any string that does not have corresponding open and close tokens is syntactically invalid. 
+However it comes with certain issues that we must address. Unlike \gls{inchi}, \smiles does not offer a unique encoding for each molecule. It is therefore possible to generate two different strings that describe the same molecule.
+Another prominent issue is linked to \smiles' special tokens. By requiring an opening token, as is needed to describe cycles, branches and isotopes (which we did not describe), any string that does not have corresponding open and close tokens is syntactically invalid. 
 
-\comment{À déplacer là où tu parleras des limites de la ML}
+\commented{À déplacer là où tu parleras des limites de la ML}
 This can be problematic in token-by-token generation if these rules are not hard constraints, which is the case in \gls{ml} techniques since they lack the ability to impose long-term structure.
 
-\gls{smiles} also has no check on the valence shells of the atoms within it. 
+\smiles also has no check on the valence shells of the atoms within it. 
 For example a Carbon atom, which wants to make 4 bonds to complete its valence shell, could be placed in such a way that it has 6 bonds.
 
-There are some ways to generate canonical \gls{smiles} strings (\ie unique for a given molecule), however no consensus has been reached on which method to use.
+There are some ways to generate canonical \smiles strings (\ie unique for a given molecule), however no consensus has been reached on which method to use.
 
-This is the encoding that we use during our work, mainly due to its popularity within the automated molecule discovery community, which allowed us to find documentation and tools that helped during the work. We will present two other molecule encodings that were introduced to resolve issues within \gls{smiles}, but they were not used due to their relatively new appearance and, consequently, to their smaller research community.
+This is the encoding that we use during our work, mainly due to its popularity within the automated molecule discovery community, which allowed us to find documentation and tools that helped during the work. We will present two other molecule encodings that were introduced to resolve issues within \smiles, but they were not used due to their relatively new appearance and, consequently, to their smaller research community.
 
 
 \subsubsection{DeepSMILES}
-DeepSMILES was introduced to answer some of \gls{smiles}' shortcomings~\cite{deepsmiles_intro}. It changes how branches and cycles are represented so that only one token is required. Instead of representing cycles using numbers as tags, they instead use numbers to indicate the size of the cycle and place the number at the end of the cycle. Similarly, branches no longer require opening branch tokens, instead they place as many branch closing tokens as there are atoms in the described branch.
+DeepSMILES was introduced to answer some of \smiles' shortcomings~\cite{deepsmiles_intro}. It changes how branches and cycles are represented so that only one token is required. Instead of representing cycles using numbers as tags, they instead use numbers to indicate the size of the cycle and place the number at the end of the cycle. Similarly, branches no longer require opening branch tokens, instead they place as many branch closing tokens as there are atoms in the described branch.
 
-Unfortunately, DeepSMILES is not perfect and sometimes fails to encode a molecule correctly. The example molecule used in Figure~\ref{fig:complex_smiles} cannot be directly converted into DeepSMILES from its \gls{smiles} format. This is a big issue, since the encoding could fail based on which bond in a cycle we choose to break to convert the graph into a tree. However, this can be avoided by first converting the molecule to canonical \gls{smiles}. The molecule still has an encoding in DeepSMILES, as shown in Table~\ref{tab:different_encodings}.
+Unfortunately, DeepSMILES is not perfect and sometimes fails to encode a molecule correctly. The example molecule used in Figure~\ref{fig:complex_smiles} cannot be directly converted into DeepSMILES from its \smiles format. This is a big issue, since the encoding could fail based on which bond in a cycle we choose to break to convert the graph into a tree. However, this can be avoided by first converting the molecule to canonical \smiles. The molecule still has an encoding in DeepSMILES, as shown in Table~\ref{tab:different_encodings}.
 
 \subsubsection{\acrshort{selfies}}
 Similarly to DeepSMILES, \gls{selfies}~\cite{selfies_intro} was introduced specifically for \gls{ml} applications, its language having been designed to minimize syntax invalidity and simplify the structure for \gls{ml} models.
 
-To resolve some of \gls{smiles}' syntax problems (\ie branch and cycle invalidity), it associates each token to a numeric value. It then overloads the tokens following cycle or branch tokens, replacing them by their numeric value. In the case of branches, they place the token at the start of the branch and the overloaded value tells us how many of the future tokens are a part of this branch. For cycles, the token is placed at the end of the cycle and the overloaded value indicates how many atoms back we have to go to find the start of the cycle.
+To resolve some of \smiles' syntax problems (\ie branch and cycle invalidity), it associates each token to a numeric value. It then overloads the tokens following cycle or branch tokens, replacing them by their numeric value. In the case of branches, they place the token at the start of the branch and the overloaded value tells us how many of the future tokens are a part of this branch. For cycles, the token is placed at the end of the cycle and the overloaded value indicates how many atoms back we have to go to find the start of the cycle.
 
-Another important difference is that all tokens are described between square brackets to remove some ambiguity. In \gls{smiles}, the square brackets are omitted for common atoms to improve readability.
+Another important difference is that all tokens are described between square brackets to remove some ambiguity. In \smiles, the square brackets are omitted for common atoms to improve readability.
 
 
 %%% SubSection Lipinski Rule of Five %%%
