@@ -10,11 +10,23 @@
 \chapter*{RÉSUMÉ}\thispagestyle{headings}
 \addcontentsline{toc}{compteur}{RÉSUMÉ}
 
-La recherche de nouvelles molécules est un processus sans fin. 
+\begin{otherlanguage}{french}
+La recherche de molécules médicales est une tâche couteuse en terme de temps et de ressources.
+Considérant que la majorité des molécules possibles ne sont pas désirables, l'utilisation de mécanisme automatisé tel que le \textit{\acrshort{ml}} gagne en popularité pour filtrer les candidats ou pour trouver des molécules ayant des propriétés particulières.
+Par contre, ces processus manque souvent de structure à long terme et n'ont pas de guarantie de respecter les règles qu'on essaye de leur faire apprendre.
 
-Le résumé est un bref exposé du sujet traité, des objectifs visés, des hypothèses émises, des méthodes expérimentales utilisées et de l'analyse des résultats obtenus. On y présente également les principales conclusions de la recherche ainsi que ses applications éventuelles. En général, un résumé ne dépasse pas trois pages.
+\acrshort{smiles} est une représentation uni-dimensionelle couramment utilisée dans le domaine de la chimie ainsi qu'en \textit{\acrshort{ml}}. 
 
-Le résumé doit donner une idée exacte du contenu du mémoire ou de la thèse. Ce ne peut pas être une simple énumération des parties du manuscrit. Le but est de présenter de façon précise et concise la nature, l’envergure de la recherche, les sujets traités, les questions de recherche ou les hypothèses soulevées, les méthodes utilisées, les principaux résultats ainsi que les conclusions retenues. Un résumé ne doit jamais comporter de références ou de figures. 
+Dans notre recherche, on propose un modèle de programmation par contraintes qui permet de représenter les molécules organiques en utilisant la représentation \acrshort{smiles}. Ce modèle met de l'avant la contrainte \textit{grammar} comme principale composante pour la représentation valide de molécules.
+
+On démontre comment certaines propriétés chimique, comme le poids moléculaire et la lipophilicitée, peuvent être représentées en programmation par contraintes dans notre modèle.
+
+On répond aussi au manque de structure à long terme dans les modèles de \textit{\acrshort{ml}} en introduisant notre modèle neurosymbolique \acrshort{geai-blanc}.
+Les probabilités qu'apprend le modèle de \textit{\acrshort{ml}} sont mélangées avec les probabilitées marginales calculées à partir de notre modèle de programmation par contraintes augmentée avec de la \acrshort{bp} lors de la génération de séquence.
+Le prochain jeton que l'on génère est choisi à partir de la distribution de probabilitées obtenue à partir du modèle.
+Nos expérimentations sur ce modèle hybride montre qu'on réussi à respecter la struncture imposée après l'entrainement du modèle sans trop s'éloigner de la structure apprise lors de l'apprentissage.
+
+\end{otherlanguage}
 
 
 \end{document}

@@ -62,6 +62,7 @@ We will use such a weight on the \oracle constraint in order to control its impo
 
 
 \subsection{Communication}
+\label{sec:cpgpt/communication}
 Since the two models are in different programming languages, \gls{gpt} is in Python while MiniCPBP (the solver from Section~\ref{sec:valid-experiments}) is in Java, we had to set up a way for them to communicate.
 We could do this by integrating one model into the other language, however we chose to use a minimalistic \gls{http} server approach.
 
@@ -243,7 +244,8 @@ The success rate of the baseline model (weight of 1) is the highest of the three
 As was expected, by increasing the weight of the constraint, we decrease the perplexity as we are giving more weight to the \gls{gpt} model's message (and inversely when we decrease the weight of the constraint).
 However, what was unexpected is the decrease in success rate regardless of which way we shift the weight.
 Intuitively, one would expect the success rate to increase as we decrease the \oracle constraint's weight, giving priority to the hard constraints.
-But, as we can see, it appears that the \gls{gpt} model contributes to the validity of the model.
+But, as we can see, the \gls{gpt} model contributes to the validity of the model and decreasing the strength of its message leads to more mistakes.
+There might be another point between 0.5 and 1.5 with a higher success rate, but finding it falls outside the scope our work.
 When we decrease the constraint's weight, we see a clear increase in perplexity: giving more weight to the constraint model over the \gls{gpt} model would have that effect.
 
 Overall, this final model performs incredibly well in terms of success rate, firmly beating \gls{gpt} and \gls{cpbp} without backtracking.

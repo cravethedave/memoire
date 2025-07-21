@@ -23,31 +23,152 @@ On every instance, our model manages to find at least one solution across the th
 
 We then model desirable molecular properties using \cp and apply the constraints to our model, without the structural constraints.
 This model is capable of generating valid molecules while targeting specific properties.
-These property constraints are estimation with acceptable error rates.
+These property constraints are estimations with acceptable error rates.
 Once again, the model is tested using the same three heuristics and every instance is resolved at least once.
 
+The results of these two test series allow us to compare the advantages of the different heuristics. \bp guides the search towards valid solutions significantly faster, however the added cost in time can cause it to solve the instance in more time than standard \cp.
+We believe that some of our constraints, namely the \grammar constraint, are quite large and the additional cost to compute the marginals needed for \bp slow down the solving. We will discuss this more later, in both our limitations and future work.
 
+Finally, we combined a simple \cp model with a \gls{llm}.
+The \cp model guarantees the validity of generated sequences, while also targeting a desired molecular weight range.
+We choose to combine the two at inference time, taking advantage of \bp and the \oracle constraint to modify the probabilities of the model before sampling the next token.
+We observed that the combined model was capable of generating valid molecules in the desired weight range much more often than either individual model (be it \cp without backtracking or the \gls{llm} model).
 
-\begin{enumerate}
-    \item Can we use \acrshort{cp} to model valid molecules in a one-dimensional encoding?
-    \item Can we use \acrshort{cp} to model desirable molecular properties in \acrshort{smiles} molecules?
-    \item Can \acrlong{bp} be used to better guide a solver towards a solution?
-    \item How can we combine a \acrshort{cp} model with a \acrshort{nlp} model to improve the realism of generated sequences and is it an effective method?
-\end{enumerate}
+This shows that our combined model allows us to repurpose a trained \gls{llm} to target a more specific type of molecule without having to retrain it to target that range.
+This makes the model much more versatile as we can change the desired range with no cost in time or resources (as opposed to retraining the model to target that specific range).
+
+We also show the consequences of changing the weight of the \oracle constraint (\ie changing the weight of the \gls{llm}'s message).
+We see that the result worsens whether we increase or decrease the weight, seemingly indicating that both models contribute significantly towards the model's success rate.
+
+Once again, by introducing \cp and \cpbp to the \gls{llm} model, we increase the time required to generate a sequence.
+However, this time the added cost of \bp was much more clear as we could see the time more than doubled. We, once again, attribute this increase to the \bp module of our large constraints.
+
 
 %%
 %%  LIMITATIONS
 %%
-\section{Limitations de la solution proposée / Limitations}
+\section{Limitations}
 \label{sec:conc/limitations}
+This section will highlight the limitations that we could not or chose not to address in the span of our work.
+
+\paragraph{Grammar Constraint's \bp Module.}
+As mentioned multiple times, the \grammar constraint's costly \bp module is one of the main suspects as to why the addition of \bp increases the time so drastically.
+We attempted some tests with another, lighter grammar, however it was too permissive with its rules and invalid \smiles strings were included in its language.
+We could not find an alternative grammar that satisfied our needs.
+Designing a light grammar that still manages to do everything we wanted proved to be too time-consuming. We abandoned the effort. 
+
+
+\paragraph{Grammar Restricting Too Many Sequences.}
+Our current grammar is too restrictive and certain valid \smiles chains are unrecognized. 
+This was a known issue stated in the original work~\cite{kraev2018grammars}. 
+Initially, we assumed that, while the grammar did not recognize certain \smiles strings, it would be able to recognize the molecule under a different \smiles representation (since the same molecule can have multiple representations).
+However, during one of our tests, we attempted to do tests on a known molecule family (benzenoids) and found no recognizable \smiles representation that our grammar accepted.
+This seems to be due to two cycles sharing an edge with each other as the model would fail when attempting to place a cycle token after the end of one of the branches required to represent the molecule (as seen in red below).
+
+{
+    \centering
+    CN3C(=O)CN=C(c1ccccc1)c\textcolor{red}{2}cc(Cl)ccc23
+}
+
+
+\paragraph{Lack of Tests on Molecular Properties.}
+Our generative models are capable of modelling valid molecules and estimating probabilities.
+These estimations were each evaluated on the datasets that we have access to and seemed to be reliable.
+However, we didn't test how accurate these estimations are on the final model.
+This is mainly due to the time it takes to generate full sequences.
+We assumed the results would be similar to what we observed on the datasets, however it would be interesting to generate a large amount of molecules and evaluate their real properties using the open source tool RDKit.
+
+
+\paragraph{ShortTable Constraint's \bp Problems.}
+The reason we had to implement the \emph{logP} score's estimation using a \costregular constraint instead of continuing with\\ \shortTable is due to the strange behavior of the \bp component.
+We couldn't find a reason as to why it preferred smaller molecules, however we did test multiple molecules generated using the \costregular and they were recognized by the module with \shortTable and found the same estimate.
+While it isn't an exhaustive test, it means we found no indication of the constraint behaving irregularly.
+
+We note this as a limitation as it prevented us from truly comparing the two methods.
+We compare the \costregular to a \shortTable without \bp and prefer it for its lower failure count and similar solve time.
+However, during this comparison, we state that the \shortTable with \bp is faster due to the small molecules it is generating.
+While this is likely accurate (the \shortTable constraint would push for an early padding token and the \grammar constraint would then pad the rest), we would have to find ways to test this to be sure.
+
+
+\paragraph{Backtracking in the Combined Model.}
+A big limitation of our combined model is its inability to backtrack.
+The main reason we didn't implement this is that the combined model research was done for our joint paper in IJCAI25\cite{ijcai:saikali}.
+The other half of the experiments were done on a model like the one we present and changing it to allow for backtracking would have been a large shift.
+However, this could be possible if we redefine the \oracle constraint (creating a new one would be a better decision).
+This fell outside the scope of our work, but would have been an interesting final iteration to compare to the others.
+
+
+\paragraph{Lack of Comparison and Evaluation.}
+At no point in our research do we compare our work to other models nor do we evaluate the quality of our molecules using metrics other than perplexity.
+This is due to the goal of our experiments.
+
+In our first experiments, we wanted to show that valid and desirable molecules could be modelled using \cp and that \bp heuristics were better at guiding the search than standard \cp heuristics.
+We achieve both of these goals and evaluating the quality of our molecules was considered out of scope for these experiments.
+
+In our second experiments, our goal was to demonstrate that the addition of \cp did not get rid of the original model's (the \gls{llm} in our case) message while still guiding the generation towards good solutions. 
+We evaluate this using perplexity as it indicates how unlikely our sequence was from the \gls{llm}'s perspective.
+However, once again, evaluating the molecules' quality did not serve the goal of our research as it would obscure what we are trying to show.
+
+While our research successfully accomplishes the goals we had set, had we had more time, evaluating the quality of our molecules using metrics used by the drug research community would have been an interesting addition to our research.
+
+
+\paragraph{Lexicographic Generation.}
+One limitation imposed on us by the type of model we chose is lexicographic generation (\ie from left to right).
+\cp is capable, and can benefit from, generating a sequence out of order.
+We did look into doing something similar using models that can complete sequences given a ``mask'' token, however our tests did not continue far and we settled on a token-by-token generation model.
+This was primarily due to a lack of time and to follow suit with the other experiments in our joint IJCAI25 paper.
+
+
+\paragraph{Our \cp Model vs N-Grams.}
+One issue we had to take into account during our combination of our \cp model to a \gls{nlp} model was that the latter models often use n-grams and our \cp model does not understand these values.
+As we described in Section~\ref{sec:cpgpt/communication}, we have to account for this by transforming the n-grams into simple tokens.
+However, this was done presuming that casting the probabilities from n-grams to simple tokens would not significantly alter the end result.
+
+
 
 %%
 %%  AMELIORATIONS FUTURES / FUTURE RESEARCH
 %%
-\section{Améliorations futures / Future Research}
+\section{Future Research}
 \label{sec:conc/future}
-Texte / Text.
+We will cover some of the future research that could further this project.
 
+\paragraph{Decreasing the Grammar Constraint's Size.}
+Decreasing the size of the grammar constraint could allow us to save a lot of time while calculating marginals.
+There are multiple ways we could achieve this.
+First, we could change the algorithm converting our \gls{cfg} into its \acrlong{cnf}.
+While the algorithm already tries to keep the resulting grammar's size to a minimum, we believe the process could be optimized to reduce it further by finding sequences of nonterminals that appear frequently near each other.
+
+Second, the more direct solution would be to change the grammar.
+By rewriting the grammar, we could design one that is smaller.
+This could also be a good opportunity to make the grammar more permissive, allowing it to recognize all \smiles strings while keeping it restrictive enough to not allow invalid \smiles strings.
+
+
+\paragraph{Fixing the \bp for the ShortTable Constraint}
+While this is not technically a part of our research, our research did reveal an issue worth investigating.
+Finding a solution to this would allow further experimentation using our research to determine which method (between the \shortTable constraints and the \costregular constraint) is better.
+The \shortTable method requires multiple constraints, one on each sequence of four tokens.
+On the other hand, the \costregular requires a single constraints to achieve the same effect.
+In our work, we could not truly compare the two to determine which works best.
+
+
+\paragraph{Evaluate Generated Molecules using Known Metrics.}
+Whether this is done in comparison to another model or not, there is merit in evaluating the end result of our research.
+While, as we said, we did accomplish everything we set out to do in our research, it would be interesting to evaluate the quality of generated molecules and see what methods generate the best quality molecules.
+
+
+\paragraph{Token by Token Perplexity Constraint.}
+In our research, we explore the topic of combining a \cp model to a \gls{ml} model at inference time to affect the probabilities before we sample the next token.
+However, an interesting approach that might have some success would be to integrate a constraint to our \cp model that calculates the perplexity of the generated sequence according to a given \gls{ml} model.
+This could lead to a \cp model ``learning'' from a \gls{ml} model and using it to generate sequences that respect the constraints and resemble sequences from the training dataset.
+
+
+\paragraph{Combining with Different Models.}
+It could be interesting to combine our \cpbp module to other \gls{ml} models to see the results.
+This isn't too hard to do as we use a server-client approach and can easily substitute one server for another.
+In specific, one limitation we mentioned was lexicographic generation, we would like to explore out of order generation.
+It would allow us to use \cp to its full extent and there are \gls{ml} models that support this.
+The main issue is finding a way to make both models agree on the number of tokens to place in each position since \gls{ml} models tend to use n-grams as we mentioned previously.
 
 
 \end{document}
