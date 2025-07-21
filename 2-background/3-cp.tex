@@ -10,9 +10,131 @@
 
 % We will first define how a simple \cp model functions: its definition, the declaration of constraints, the constraint propagation, the branching decisions, error detection and management.
 We will first define how a simple \cp model functions. We will cover the initial problem declaration, the constraint declaration to describe the problem and finally the solving process and its intricacies (constraint propagation, branching decisions, backtracking).
-Once that is covered, we can expand on this topic by introducing \gls{cpbp}
-\david{cite BP from original paper}
+Once that is covered, we can expand on this topic by introducing \gls{cpbp}~\cite{GP:BP}
 which is an improvement over standard constraint propagation and leads to more informed decisions. We use \gls{cpbp} in our work since it tends to yield better results and allows for the combination with a \gls{ml} model as we will describe later.
+
+\subsection{Used Constraints}
+
+\subsubsection{All Different Constraint}
+The \alldifferent constraint takes a single parameter:
+\begin{itemize}
+    \item $X$: a subset of variables.
+\end{itemize}
+
+It does exactly as its name implies and ensures that the variables within its scope are each assigned a different value.
+
+$$
+    \alldifferent(\langle X_1, X_2, \ldots, X_n \rangle)
+$$
+
+\subsubsection{Among Constraint}
+The \among constraint takes three parameters: 
+\begin{itemize}
+    \item $X$: a subset of variables,
+    \item $V$: a set of values whose occurrences we count in the variables $X$,
+    \item $o$: a set of allowed occurrences. This can be a simple integer when only a single value is allowed.
+\end{itemize}
+
+It ensures the values in $V$ appear as many times as one of the values in $o$.
+For the sake of our example, we define $o$ as a set containing 3 values: $o_1, o_2, o_3$.
+
+$$
+    \among(\langle X_1, X_2, \ldots, X_n \rangle, \{V_1, V_2, \ldots, V_m\}, \{o_1, o_2, o_3\})
+$$
+
+\subsubsection{Element Constraint}
+The \element constraint takes three parameters:
+\begin{itemize}
+    \item $V$: an array of size $m$,
+    \item $X$: a variable whose domain has $m$ as an upper bound,
+    \item $Y$: a variable which will be constrained to take a value from $V$.
+\end{itemize}
+
+It binds the value of $Y$ to the value in $V$ indexed by the value of $X$. In other words, if $X$ had a value of $i$, then we would attempt to assign $V_i$ to $Y$.
+
+$$
+    \element([V_1, V_2, \ldots, V_i, \ldots, V_m], X, Y)
+$$
+
+\subsubsection{Grammar Constraint}
+The \grammar constraint takes two parameters:
+\begin{itemize}
+    \item $X$: a subset of variables,
+    \item $g$: a \acrfull{cfg}.
+\end{itemize}
+
+It ensures that the values assigned to the variables represent a word from the given grammar's recognized language.
+
+This constraint is critical to our work as it allows us to represent our molecule encoding as a \gls{cfg}, guaranteeing that generated sequences are a word in the recognized language.
+
+$$
+    \grammar(\langle X_1, X_2, \ldots, X_n \rangle, g)
+$$
+
+\subsubsection{Regular Constraint}
+The \regular constraint usually takes four parameters:
+\begin{itemize}
+    \item $X$: a subset of variables,
+    \item $\mathcal{A}$: a transition matrix mapping each state to the next appropriate state given an input value. For a given state, $s$, and value $v$, the next state, $s'$, is determined as follows: $A[s][v] = s'$,
+    \item $S$: an initial state,
+    \item $f$: a list of final states. This parameter can be omitted in the case where all states are valid accepting states, which is the case in the \regular constraints used in our work.
+\end{itemize}
+
+Starting at the initial state, we use the value of the next variable (\ie the first one) in the sequence to map towards the next state. The constraint is respected if our last variable leads to an accepting state.
+
+$$
+    \regular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}, S, [s_1, s_3, \ldots])
+$$
+
+\subsubsection{Cost Regular Constraint}
+The \costregular constraint takes the same four parameters as the \regular constraint, however it takes two supplementary values:
+\begin{itemize}
+    \item $\mathcal{W}$: A matrix indicating the associated weight to each state transition in $\mathcal{A}$,
+    \item $t$: A variable whose domain constrains the minimal and maximal allowed cost.
+\end{itemize}
+
+Similarly to the \regular constraint, we go through the state machine using the value of each variable to determine the next state to visit.
+However, we now have two conditions to respect. First, we still have to end on a valid accepting state as was the case previously. Second, our final cost must be in the domain of our total cost variable, $t$.
+We represent the domain of the $t$ variable underneath the \costregular constraint. For the sake of our example, we define $t^-$ and $t^+$ as the minimal and maximal value respectively.
+
+\begin{align*}
+    &\costregular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}, \mathcal{W}, S, [s_1, s_3, \ldots], t)\\
+    &t^- \leq t \leq t^+
+\end{align*}
+
+\subsubsection{Sum Constraint}
+The \somme constraint takes two parameters:
+\begin{itemize}
+    \item $X$: a subset of variables,
+    \item $Y$: a variable that represents the sum of the values of variables $X$.
+\end{itemize}
+
+This constraint constrains the sum of the values of the variables in its scope to be within the domain of the variable $Y$.
+We represent the domain of the $Y$ variable underneath the \somme constraint. For the sake of our example, we define $y^-$ and $y^+$ as the minimal and maximal value respectively for variable $Y$.
+
+\begin{align*}
+    &\somme(\langle X_1, X_2, \ldots, X_n \rangle, Y)\\
+    &y^- \leq Y \leq y^+
+\end{align*}
+
+\subsubsection{Table Constraint}
+The \extensional constraint takes two parameters:
+\begin{itemize}
+    \item $X$: a subset of variables,
+    \item $\mathcal{T}$: a table of recognized tuples.
+\end{itemize}
+
+The \extensional constraint ensures that the given variables are assigned values such that there is a matching tuple in the table $\mathcal{T}$.
+
+$$
+    \extensional(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{T})
+$$
+
+\subsubsection{Short Table Constraint}
+The \shortTable is an improvement on the \extensional constraint and takes the same two parameters.
+It allows the use of a wild card token in the table.
+We use this to compress a very large table in our work (Chapter~\ref{chap:cp-validity}).
+
 
 %%% SubSection Base Model Definition %%%
 \subsection{Constraint Satisfaction Problem}
@@ -38,12 +160,12 @@ We could represent this using a 2-dimensional array of variables like so:
 All that is missing are the constraints, which are the source of the complexity of the problem.
 
 The \textbf{constraints} in a Sudoku are fairly straightforward, lines, columns and all 3x3 sub-grids within the total grid may not contain any repeat values.
-In the \cp community, this type of constraint is very common and is called an \texttt{alldifferent} constraint. The Sudoku problem would therefore have the following constraints:
+In the \cp community, this type of constraint is very common and is called an \alldifferent constraint. The Sudoku problem would therefore have the following constraints:
 
 \begin{gather*}
-    \texttt{alldifferent}(tile[1][j], tile[2][j], \dots, tile[9][j])\ \forall\ j \mid j \in \{1,2,\dots,9\} \\
-    \texttt{alldifferent}(tile[i][1], tile[i][2], \dots, tile[i][9])\ \forall\ i \mid i \in \{1,2,\dots,9\} \\
-    \texttt{alldifferent}(\\
+    \alldifferent(tile[1][j], tile[2][j], \dots, tile[9][j])\ \forall\ j \mid j \in \{1,2,\dots,9\} \\
+    \alldifferent(tile[i][1], tile[i][2], \dots, tile[i][9])\ \forall\ i \mid i \in \{1,2,\dots,9\} \\
+    \alldifferent(\\
         tile[3u+1][3v+1],tile[3u+1][3v+2],tile[3u+1][3v+3],\\
         tile[3u+2][3v+1],tile[3u+2][3v+2],tile[3u+2][3v+3],\\
         tile[3u+3][3v+1],tile[3u+3][3v+2],tile[3u+3][3v+3],\\
@@ -136,19 +258,6 @@ When multiple constraints interact on one variable, they each simultaneously com
     \caption[\acrlong{cpbp} combining probabilities]{The variables which are affected by multiple constraints ($X$ and $Z$) merge the communicated probabilities that were communicated by the different constraints. $X$ filters out the value $c$ and $Z$ filters out $b$, as was communicated by the constraints seen in Figure~\ref{fig:cpbp_messaging}.}
     \label{fig:cpbp_combined}
 \end{figure}
-
-\subsection{Among Constraint}
-
-\subsection{Element Constraint}
-
-\subsection{Grammar Constraint}
-
-\subsection{Regular Constraint}
-
-\subsection{Sum Constraint}
-
-\subsection{Table Constraint}
-\subsubsection{Short Table Constraint}
 
 
 \end{document}

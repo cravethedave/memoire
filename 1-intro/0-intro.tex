@@ -35,31 +35,14 @@ This \cp approach, which excels at imposing hard rules and long-term structure w
 Often times, these models struggle to exhibit long-term structure, stemming in part from the token-by-token nature of the prediction process used to generate a sequence.
 In other words, these models do not explicitly learn the hard rules that determine validity nor desirability and merely mimic what was observed.
 
-While this problem can be addressed at training, by changing what the model is trained on such that it can better learn the structure, we wish to introduce a \gls{cpbp} model at inference time (generation). This should enforce the presence of the desired structure, which is critical if it is mandatory~\cite{deutsch2019general,lee2019gradient}.
-In other words, this technique could allow us to target properties and structures that the model was never trained to generate while still maintaining advantages of the original model.
+While this problem can be addressed at training, by changing what the model is trained on such that it can better learn the structure, there is no guarantee that the desired structure will be respected. 
+We wish to introduce a \gls{cpbp} model at inference time (generation) to enforce the presence of the desired structure, which is critical if it is mandatory~\cite{deutsch2019general,lee2019gradient}. We will discuss this further in Chapter~\ref{chap:cp-validity} of our work.
 
-This guarantees that a generated molecule will respect the desired structure, which is critical if it is mandatory~\cite{deutsch2019general,lee2019gradient}.
-
-This combined model is of more interest, however, when we wish to impose constraints that were not featured in the training dataset of the model. This allows the satisfaction of these new constraints while avoiding the retraining of the model, which can be costly with larger models.
+This combination of \cp and \gls{ml}, which will be seen in Chapter~\ref{chap:gpt+cp}, could allow us to target properties and structures that the model was never trained to generate while still maintaining advantages of the original model.
+Another point of interest, the combined model could introduce constraints that the base \gls{ml} model was not trained on.
+This allows the satisfaction of these new constraints while avoiding the retraining of the model, which can be costly with larger models.
 
 This combination of both techniques could lead to valid, realistic and property-constrained molecules. However, there is a balance to maintain as we do not wish to stray too far from what was featured in the training dataset in order to respect the imposed constraints. This is particularly difficult for long-term structure, which requires balancing foresight over many yet-to-be generated tokens and the immediacy of next-token predictions from the sequence model.
-
-
-
-%%%%%%%%% Section CFG %%%%%%%%%
-\subfile{1-cfg.tex}
-
-
-%%%%%%%%% Section Chemistry %%%%%%%%%
-\subfile{2-chemistry.tex}
-
-
-%%%%%%%%% Section Constraint Programming %%%%%%%%%
-\subfile{3-cp.tex}
-
-
-%%%%%%%%% Section Natural Language Processing %%%%%%%%%
-\subfile{4-nlp.tex}
 
 
 \section{Problem Statement}

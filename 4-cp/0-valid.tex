@@ -21,15 +21,49 @@ The original work uses masks in addition to this grammar to completely avoid inv
 The first mask handles numerical assignment for cycles, guaranteeing that cycles are numbered correctly.
 The second mask avoids making cycles that are too small (\ie cycles of 2 atoms) and cycles that are too long. They limit their cycle length to 8 based on what they observe in their database~\cite{kraev2018grammars}.
 
-\commented{Include important rules here from grammar}
-We address both of these issues by modifying the base grammar and adding new constraints as will be discussed later. The final grammar used for validity can be seen in Appendix~\ref{annex:grammar-validity}.
+We address both of these issues by modifying the base grammar (a small sample can be seen in Table~\ref{tab:validity-grammar-example}) and adding new constraints as will be discussed later. The final grammar used for validity can be seen in Appendix~\ref{annex:grammar-validity}.
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{r|ccc}
+        1 & smiles & $\rightarrow$ & simple\_bond \\
+        2 & smiles & $\rightarrow$ & atom\_valence\_1 simple\_bond \\
+        3 & smiles & $\rightarrow$ & atom\_valence\_2 double\_bond \\
+        4 & smiles & $\rightarrow$ & atom\_valence\_3 triple\_bond \\
+         & & \ldots & \\
+        5 & atom\_valence\_1 & $\rightarrow$ & ``F'' \\
+         & & \ldots & \\
+        6 & simple\_bond & $\rightarrow$ & valence\_1 \\
+        7 & simple\_bond & $\rightarrow$ & valence\_2 simple\_bond \\
+        8 & simple\_bond & $\rightarrow$ & valence\_3 double\_bond \\
+        9 & simple\_bond & $\rightarrow$ & valence\_4 triple\_bond \\
+         & & \ldots & \\
+        10 & valence\_1 & $\rightarrow$ & atom\_valence\_1 \\
+         & & \ldots & \\
+        11 & valence\_2 & $\rightarrow$ & atom\_valence\_2 \\
+    \end{tabular}
+    \caption[A small extract from the total grammar.]{A small extract from the total grammar. It is used to represent valid molecules. The rules seen here include the starting token ``smiles''. We show how that starting token can be developed into a growing sequence. A simple example: start with rule 2 and repeat rule 7 until the sequence is as large as desired. We insert ``\ldots'' to indicate a jump in lines from the complete grammar in Appendix~\ref{annex:grammar-validity}}
+    \label{tab:validity-grammar-example}
+\end{table}
 
 \subsubsection{Padding}
 For the purpose of using this grammar in our \cp model, we add padding tokens that can complete the end of a molecule. 
 This will allow our model to generate any molecule up to the size instead of giving it a fixed length, allowing for a more versatile model.
 We chose ``\_'' as our padding token.
 
-An easy way to make this change is to create a new starting token that can be developed into the old start token and any number of padding tokens (including none). This change was not influential on the performance of the algorithm and allows for more options during generation.
+An easy way to make this change is to create a new starting token that can be developed into the old start token and any number of padding tokens (including none). This change was not influential on the performance of the algorithm and allows for more options during generation. See Table~\ref{tab:grammar-padding} to see the added sequences for this change.
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{r|ccc}
+        1 & empty\_smiles & $\rightarrow$ & smiles \\
+        2 & empty\_smiles & $\rightarrow$ & smiles void \\
+        3 & void & $\rightarrow$ & ``\_'' void \\
+        4 & void & $\rightarrow$ & ``\_'' \\
+    \end{tabular}
+    \caption[Added productions to add padding to our grammar.]{Added productions to add padding to our grammar. By creating a new starting token, ``empty\_smiles'', we allow our grammar to generate all previous sequences as normal. However, we also allow any valid sequence of smaller size followed by the void token until the sequence is full.}
+    \label{tab:grammar-padding}
+\end{table}
 
 
 \subsubsection{Hydrogen tokens}
@@ -261,10 +295,6 @@ As we explained earlier in Section~\ref{sec:molecule-encodings}, aromatic cycles
 This is common enough to justify a shorthand notation in \smiles.
 We can assume that these atoms are bonded to 3 other atoms, unlike the 2 bonds for non-aromatic atoms, \eg the aromatic variant of Carbon would have 1 Hydrogen atom bonded to it instead of 2 and its associated weight would reflect this.
 
-\commented{Tu ne dis pas que tu as fait une régression linéaire. Ces poids sur les jetons ne sont quand même pas le "ground truth" mais une approximation statistique. Donc tu es quand même justifié d'avoir utilisé tes poids. Dis simplement que ces tests confirment que les poids que tu as dérivés manuellement donne une bonne approximation du poids réel.}
-
-\gilles{Ces tests sont avant la r\'egression lin\'eaire, c'\'etait quand on regardait ce qui cause les erreurs et on a trouv\'e qu'en mettant un poids de 10 pour le ``+'', on obtient des meilleurs r\'esultats}
-
 Finally, we did some testing to see the accuracy of our estimation.
 We used the open-source tool RDKit\footnote{https://www.rdkit.org/} to calculate the true weight.
 During our tests, we found that associating a positive weight to the ``+'' token improved the score.
@@ -487,7 +517,9 @@ This representation results in a number of constraints which grows linearly with
 
 
 \paragraph{Cost Regular Implementation}
-To implement this constraint using a \costregular, we have to remap our ${\cal T}^{p\star}$ table into an automaton $\mathcal{A}^p$.
+To implement this constraint using a \costregular, we have to remap our ${\cal T}^{p\star}$ table into an automaton $\mathcal{A}^p$. We also create a transition cost table ${\cal W}_{\mathcal{A}^p}$ indicating the associated weight to each state transition.
+
+Contrary to the \shortTable representation where we constrained $S^p$ to determine the allowed \emph{logP} value, in this implementation, we simply change the domain of $t_w$, the total cost variable.
 
 This automaton contains a state for each non-zero weight $4$-gram as well as states for every $3$-gram, $2$-gram and $1$-gram necessary to get to the non-zero weight $4$-grams.
 The transition to a $4$-gram state is associated to the partial contribution of that $4$-gram.
@@ -497,7 +529,7 @@ See Algorithm~\ref{algo:logp-regular} to see exactly how we create the transitio
 The final automaton has $41'741$ states, a considerable reduction in size compared to the previous \shortTable constraint.
 
 \begin{align*}
-    &\costregular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}^p, {\cal W}_{\mathcal{A}^p}).
+    &\costregular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}^p, {\cal W}_{\mathcal{A}^p}, t_w)
 \end{align*}
 
 \begin{figure}[ht]
@@ -624,7 +656,65 @@ The validity constraints are identical to the ones in the previous experiments, 
 \subsection{Chomsky Normal Form}
 All of our experiments require the \grammar constraint and since the solver we use, miniCPBP\footnote{\url{https://github.com/PesantGilles/MiniCPBP}}, requires a grammar in \gls{cnf} for its implementation, we develop a method to automate the transformation from the readable \gls{cfg} form to the desired \gls{cnf}. This allows us to keep working on the more readable \gls{cfg} format.
 
-\gilles{Do I insert here from the intro? Or leave it where it is}
+A grammar is said to be in Chomsky Normal Form if it follows a few additional rules on top of those of a \gls{cfg}. No production may contain the null symbol $\epsilon$ and the right-hand side of any production must be either: a single terminal or two nonterminals. The following \gls{cfg} could be converted to be in Chomsky Normal Form by applying four steps.
+
+\begin{align*}
+    \mathcal{N} &= \{S,X,Y,Z\}\\
+    \Sigma &= \{a,b\}\\
+    \mathcal{R} &= \{ S \rightarrow XYZ ,\  X \rightarrow aXb ,\  X \rightarrow \epsilon ,\  Y \rightarrow aa ,\   Y \rightarrow bb ,\ Y \rightarrow X ,\ Z \rightarrow abba ,\ Z \rightarrow XabY \}\\
+    S &= S\\
+\end{align*}
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+    \item Initial grammar
+        \begin{align*}
+            S &\rightarrow XYZ\\
+            X &\rightarrow aXb \mid \epsilon\\
+            Y &\rightarrow X \mid aa \mid bb\\
+            Z &\rightarrow XabY \mid abba\\
+        \end{align*}
+    \item Remove null productions
+        \begin{align*}
+            S &\rightarrow XYZ \mid XZ \mid YZ \mid Z\\
+            X &\rightarrow aXb \mid ab\\
+            Y &\rightarrow X \mid aa \mid bb\\
+            Z &\rightarrow XabY \mid Xab \mid abY \mid ab \mid abba\\
+        \end{align*}
+    \item Replace unit productions
+        \begin{align*}
+            S &\rightarrow XYZ \mid XZ \mid YZ \mid XabY \mid Xab \mid abY \mid ab \mid abba\\
+            X &\rightarrow aXb \mid ab\\
+            Y &\rightarrow aXb \mid ab \mid aa \mid bb\\
+            Z &\rightarrow XabY \mid Xab \mid abY \mid ab \mid abba\\
+        \end{align*}
+    \item Shorten the right-side to two tokens
+        \begin{align*}
+            S &\rightarrow XC \mid XZ \mid YZ \mid XD \mid XE \mid EY \mid ab \mid EF\\
+            X &\rightarrow aG \mid ab\\
+            Y &\rightarrow aG \mid ab \mid aa \mid bb\\
+            Z &\rightarrow XD \mid XE \mid EY \mid ab \mid EF\\
+            C &\rightarrow YZ\\
+            D &\rightarrow EY\\
+            E &\rightarrow ab\\
+            F &\rightarrow ba\\
+            G &\rightarrow Xb\\
+        \end{align*}
+    \item Create unit productions for terminal tokens
+        \begin{align*}
+            S &\rightarrow XC \mid XZ \mid YZ \mid XD \mid XE \mid EY \mid AB \mid EF\\
+            X &\rightarrow AG \mid AB\\
+            Y &\rightarrow AG \mid AB \mid AA \mid BB\\
+            Z &\rightarrow XD \mid XE \mid EY \mid AB \mid EF\\
+            A &\rightarrow a\\
+            B &\rightarrow b\\
+            C &\rightarrow YZ\\
+            D &\rightarrow EY\\
+            E &\rightarrow AB\\
+            F &\rightarrow BA\\
+            G &\rightarrow XB\\
+        \end{align*}
+\end{enumerate}
 
 After converting the original grammar, the number of nonterminals and productions, respectively, increase to 169 and 411.
 Meanwhile, the final grammar for the structural experiments grows to 640 nonterminals and 1996 productions. 
@@ -649,12 +739,23 @@ We report on its use with standard depth-first search (\gls{dfs}) and also with 
 
 
 \section{Results}
-This section will briefly go over our results as well as preliminary tests performed to determine which constraint \emph{logP} constraint to use.
+This section will briefly go over our results as well as preliminary tests performed to determine which \emph{logP} constraint to use.
 
 \subsection{\emph{LogP} Comparison}
-To determine which version of the \emph{logP} constraint to use, we ran a few preliminary tests and noted the time taken for each part of the process as well as the failures while exploring the search tree. The results can be seen in Table~\ref{tab:logp-constraint-time-analysis}.
+To determine which version of the \emph{logP} constraint to use, we ran a few preliminary tests and noted the time taken for each part of the process as well as the failures while exploring the search tree.
 
-\begin{table}[H]
+To limit the effect of other constraints on the model we deactivate all constraints other than the validity constraints and the \emph{logP} constraint.
+This maintains valid molecule generation, which is the context in which these constraints will be used.
+
+Since these constraints will be used in tandem to other constraints, sometimes with \bp active, we use a \bp heuristic for all three.
+We use maxMarginalStrength (a constraint we use later on in our tests) with a Biased Wheel Selection for values which introduces some randomness and allows us to average the time and fails for multiple runs to get a better idea of the constraints effects.
+We do 10 runs and average the results for setup time (the post for each constraint as well as the first propagation), solve time (the time until a first solution is found) and the number of failures.
+
+While using a \bp based heuristic does give the \shortTable without \bp a disadvantage, it is justified since the constraint will be run in a similar environment later and we wish to see if it is a viable option compared to the other two. Note, the \shortTable constraint without \bp has its component fully disabled, meaning we do not waste time computing its marginals (\ie only the validity constraints compute marginals, which is included in the other two constraints' time).
+
+The results can be seen in Table~\ref{tab:logp-constraint-time-analysis}.
+
+\begin{table}[t]
     \centering
     \begin{tabular}{|c|c|c|c|}
         \cline{2-4}
@@ -689,16 +790,18 @@ Branching heuristics based on marginals make an integrated choice of variable an
 The very low number of fails for \texttt{maxMarginalStrength} (several instances are even solved backtrack-free) is remarkable and shows the usefulness of the weighted counting algorithm for the \grammar constraint and of \bp as a whole.
 There are four instances that are unsolved within the time limit, this is likely due to a bad decision early on in the search tree (as we are using a \gls{dfs}).
 As can be seen by the results using \gls{lds}, all but one instance become solved, confirming our previous suspicion.
-Even though, our \bp heuristics take more time per fail than their pure \cp counterpart, by quickly guiding the search towards a valid solution, \bp heuristics end up solving the problem faster in most cases.
+Even though, our \bp heuristics take more time per fail than their pure \cp counterpart (\ie \texttt{domWDeg/random}), by quickly guiding the search towards a valid solution, \bp heuristics end up solving the problem faster in most cases.
 
 \subsection{Molecular Properties Experiments}
 The results to our structural experiments can be seen in Table~\ref{tab:property-results}.
 
-Similarly to the previous experiments, the \texttt{domWDeg/random} heuristic performs well on most instances, leaving only one unsolved in the allocated time.
-The advantage \bp gives to a solver can be seen much more clearly in these instances.
+Similarly to the previous experiments, the \texttt{domWDeg/random} heuristic performs well on most instances, solving every instance in the allocated time.
+The advantage \bp gives to a solver can be seen clearly in these instances.
+Even though all instances are solved by each heuristic, the difference in fails is significant.
 Almost every instance is solved with fewer than 10 backtracks when using \texttt{maxMarginalStrength}.
 Unfortunately, the whether we use \gls{dfs} or \gls{lds} makes very little difference, and we cannot reliably say one method is better than the other in this instance.
-However, while \texttt{maxMarginalStrength} does solve the problem with very few fails, the time to solve the instance is sometimes comparable to the pure \cp alternative.
+However, not only does \texttt{maxMarginalStrength} solve the problem with very few fails, the time to solve the instance is sometimes comparable or better than the pure \cp alternative (\ie \texttt{domWDeg/Random}).
+This isn't always the case, so we cannot state that one method is faster than the other.
 
 Overall, these results once again confirm that constrained molecule generation is achievable using a \cp model such as the one described prior.
 Although using the \grammar constraint is convenient, the aforementioned computational cost can be felt due to its large size.
@@ -707,7 +810,7 @@ Running several iterations of \bp (including the weighted counting algorithm for
 However, these are clearly offset by the superior search guidance, and thus, much smaller search tree.
 
 
-\begin{table}[H]
+\begin{table}[t]
     \centering
     \begin{tabular}{crrrrrr}
         \hline
@@ -730,22 +833,22 @@ However, these are clearly offset by the superior search guidance, and thus, muc
 \end{table}
 
 
-\begin{table}[]
+\begin{table}[t]
     \centering
     \begin{tabular}{lrrrrrr}
         \hline
         & \multicolumn{2}{c}{\texttt{domWdeg/random}} & \multicolumn{2}{c}{\texttt{maxMarginalStrength/DFS}} & \multicolumn{2}{c}{\texttt{maxMarginalStrength/LDS}}\\
         instance & time(s) & fails & time(s) & fails & time(s) & fails \\
         \hline
-        [175,225] [-4,-3]  & 287.6 &  66 & 200.3 & 30 & 173.4 & 2\cr
-        [175,225] [-2,-1]  & 368.7 &  33 & 166.1 &  0 & 186.0 & 0\cr
-        [175,225] [1,2]    &    -- &  -- & 190.5 &  6 & 233.6 & 9\cr
-        [275,325] [-4,-3]  & 588.9 & 105 & 260.0 &  0 & 287.1 & 0\cr
-        [275,325] [-2,-1]  & 217.2 &   5 & 287.2 &  0 & 279.8 & 0\cr 
-        [275,325] [1,2]    & 209.7 &   5 & 282.6 &  0 & 321.3 & 0\cr 
-        [375,425] [-4,-3]  & 527.8 & 231 & 160.7 &  2 & 179.2 & 1\cr 
-        [375,425] [-2,-1]  & 401.4 & 121 & 140.6 &  1 & 160.4 & 1\cr 
-        [375,425] [1,2]    & 199.8 &  23 & 187.0 &  0 & 141.4 & 0\cr 
+        [175,225] [-4,-3]  & 253.5 & 137 & 200.3 & 30 & 173.4 & 2\cr
+        [175,225] [-2,-1]  & 134.3 & 110 & 166.1 &  0 & 186.0 & 0\cr
+        [175,225] [1,2]    & 374.5 & 261 & 190.5 &  6 & 233.6 & 9\cr
+        [275,325] [-4,-3]  & 130.4 & 109 & 260.0 &  0 & 287.1 & 0\cr
+        [275,325] [-2,-1]  &  97.0 &  33 & 287.2 &  0 & 279.8 & 0\cr 
+        [275,325] [1,2]    & 141.0 & 105 & 282.6 &  0 & 321.3 & 0\cr 
+        [375,425] [-4,-3]  & 312.9 & 258 & 160.7 &  2 & 179.2 & 1\cr 
+        [375,425] [-2,-1]  &  79.0 &  31 & 140.6 &  1 & 160.4 & 1\cr 
+        [375,425] [1,2]    &  74.5 &   6 & 187.0 &  0 & 141.4 & 0\cr 
         \hline
     \end{tabular}
     \caption[Comparing branching heuristics on some Lipinski-constrained molecule generation instances.]{Comparing branching heuristics on some Lipinski-constrained molecule generation instances. Instances marked with a blank line indicate a timed out instance. The number of fails indicates how many dead ends the solver ran into and had to backtrack to get out of. Since \texttt{domWdeg/random} incorporates randomness, we run 11 instances and report the median.}

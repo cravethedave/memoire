@@ -7,7 +7,7 @@
 \usepackage[hidelinks]{hyperref}
 
 %% Support des acronymes. / Support for acronyms.
-\usepackage[acronym]{glossaries}
+\usepackage[acronym, nonumberlist]{glossaries}
 \usepackage{xspace}
 \makeglossaries
 
@@ -27,6 +27,7 @@
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=2pt](char) {#1};}}
 \newcommand{\constraint}[1]{\mbox{\sc #1}\xspace}
 
+\newcommand{\alldifferent}{\constraint{AllDifferent}}
 \newcommand{\among}{\constraint{Among}}
 \newcommand{\costregular}{\constraint{CostRegular}}
 \newcommand{\element}{\constraint{Element}}
@@ -329,7 +330,7 @@ a été dûment accepté\ifthenelse{\equal{\monDiplome}{M}}{}{e} par le jury d'e
 \subfile{1-intro/0-intro.tex}
 
 % Background
-% \subfile{2-background/0-background.tex}
+\subfile{2-background/0-background.tex}
 
 % Revue de littérature / Literature review
 \subfile{3-review/0-review.tex}

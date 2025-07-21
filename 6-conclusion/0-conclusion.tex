@@ -6,14 +6,34 @@
 
 \Chapter{CONCLUSION}
 \label{chap:conclusion}
-Texte / Text.
+This chapter will conclude our work.
+We will first go over the work we did, summarizing our main findings and their impact in regard to the research questions stated at the start of the paper.
+Then we will highlight the limitations of our work and how it might have affected our results.
+Finally, we will discuss future work that could be of interest to us our future researchers wishing to pursue this topic further.
 
 %%
 %%  SYNTHESE DES TRAVAUX / SUMMARY OF WORKS
 %%
-\section{Synthèse des travaux / Summary of Works}
+\section{Summary of Works}
 \label{sec:conc/summary}
-Texte / Text.
+We defined a model capable of modelling valid molecules using a commonly used one-dimensional representation: \smiles.
+
+We first test this model using additional structural constraints and three heuristics:\\ \texttt{domWdeg/Random}, \texttt{maxMarginalStrength/DFS}, and \texttt{maxMarginalStrength/LDS}.
+On every instance, our model manages to find at least one solution across the three heuristics, confirming that our representation can generate valid molecules in \smiles format.
+
+We then model desirable molecular properties using \cp and apply the constraints to our model, without the structural constraints.
+This model is capable of generating valid molecules while targeting specific properties.
+These property constraints are estimation with acceptable error rates.
+Once again, the model is tested using the same three heuristics and every instance is resolved at least once.
+
+
+
+\begin{enumerate}
+    \item Can we use \acrshort{cp} to model valid molecules in a one-dimensional encoding?
+    \item Can we use \acrshort{cp} to model desirable molecular properties in \acrshort{smiles} molecules?
+    \item Can \acrlong{bp} be used to better guide a solver towards a solution?
+    \item How can we combine a \acrshort{cp} model with a \acrshort{nlp} model to improve the realism of generated sequences and is it an effective method?
+\end{enumerate}
 
 %%
 %%  LIMITATIONS
