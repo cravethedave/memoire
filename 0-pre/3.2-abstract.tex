@@ -13,16 +13,14 @@
 \addcontentsline{toc}{compteur}{ABSTRACT}
 
 Drug discovery is a very costly endeavor in both time and resources and, unfortunately, most possible molecules are not desirable.
-Using automated techniques such as \acrshort{ml} has become standard to reduce the number of likely candidates or to target specific types of molecules.
-However, these techniques often struggle to exhibit long term structure.
+Using automated techniques such as \acrlong{ml} has become standard to reduce the number of likely candidates or to target specific types of molecules.
+However, these techniques offer no guarantees that such targets are reached.
 
-Among the standard formats used to encode molecules, \acrshort{smiles} is a widespread string representation that has gained traction in both \acrshort{ml} and chemistry circles.
-
+Among the standard formats used to encode molecules, \acrshort{smiles} is a widespread string representation that has gained traction in both \acrlong{ml} and chemistry circles.
 We propose a constraint programming model showcasing the grammar constraint to express the design space of organic molecules using the \acrshort{smiles} notation.
-
 We show how some common physicochemical properties --- such as molecular weight and lipophilicity --- and structural features can be expressed as constraints in the model.
 
-We also address the lack of long term structure in \acrshort{ml} models by introducing our neurosymbolic framework \acrshort{geai-blanc}.
+We also address the lack of guarantees in \acrlong{ml} models by using our neurosymbolic framework \acrshort{geai-blanc}.
 The learned probabilities of the sequence model are mixed in with the marginal probabilities from a constraint programming / belief propagation framework at inference time.
 The next predicted token is then selected from the resulting probability distribution.
 Experiments on this hybrid model show that we can achieve the post-training imposed structure without straying too much from the structure of the dataset learned during training.

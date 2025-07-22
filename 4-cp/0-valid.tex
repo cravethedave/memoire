@@ -627,7 +627,7 @@ In the previous section, we've answered our first two research questions:
 
 In this section, our experiments will serve to answer the third of our questions: Can \bp be used to better guide a solver towards a solution?
 These experiments will also serve to see the usefulness of the newly implemented weighted counting algorithm that was designed for the \grammar constraint.
-The algorithm itself is out of scope for this paper, however these experiments were designed with the algorithm in mind.
+The algorithm itself is out of scope for this thesis, however these experiments were designed with the algorithm in mind.
 
 There are two series of experiments: experiments on structural constraints and experiments on Lipinski's rule of five.
 
@@ -652,6 +652,10 @@ The validity constraints are identical to the ones in the previous experiments, 
 \paragraph{Molecular Weight Constraint.} This time, we vary the target range for the molecular weight constraint to generate instances of varying complexity. The ranges we use are: [175\ldots225], [275\ldots325], [375\ldots425]. These ranges give us an idea of the behavior while generating light, medium and heavy molecules. 
 
 \paragraph{\emph{LogP} Constraint.} By varying the targeted \emph{logP} score, we get nine different instances similarly to the previous experiments. We choose the ranges: [-4,-3], [-2,-1], [1,2]. Note, none of our ranges include 0 as it may encourage the model to only use zero-weight $4$-grams. This behavior would be of little interest to us as we wish to show the advantages of \bp and this could be equivalent to disabling the constraint.
+
+\paragraph{Hydrogen-bond Acceptors/Donors Constraints.}
+We apply the Hydrogen-bond Acceptors constraint as well as the Hydrogen-bond Donors constraint with no changes to their previous definitions.
+
 
 \subsection{Chomsky Normal Form}
 All of our experiments require the \grammar constraint and since the solver we use, miniCPBP\footnote{\url{https://github.com/PesantGilles/MiniCPBP}}, requires a grammar in \gls{cnf} for its implementation, we develop a method to automate the transformation from the readable \gls{cfg} form to the desired \gls{cnf}. This allows us to keep working on the more readable \gls{cfg} format.
@@ -726,7 +730,7 @@ However, seeing as we are using Belief Augmented Constraint Programming, this re
 So while the two modified grammars are of comparable size, they should both slow down the solver.
 
 \subsection{Used Heuristics}
-In our experiments, we include tests on three different heuristics.
+In our experiments, we include tests on two different heuristics.
 
 \paragraph{domWDeg.} Being a learning-based heuristic, \texttt{domWDeg}~\cite{domwdeg} is run with restarts (initially after 100 fails and increased by a 1.5 factor), which is a common practice.
 Early experiments on our instances confirmed that it generally performs better with restarts than without.
@@ -781,6 +785,11 @@ Meanwhile, the \regular constraint takes more time, but generates full length mo
 The \shortTable without \bp is dominated in every aspect by the other two candidates.
 We settle on using the \regular constraint, preferring its low failure count and reliable results over the \shortTable equivalent.
 
+We later decided to run a sanity check using the \shortTable constraint without \bp and our best heuristic (\ie \texttt{maxMarginalStrength/LDS}).
+These results can be seen in Table~\ref{tab:short-table-results} and are significantly worse than the official results in Table~\ref{tab:property-results} using the \regular constraint.
+By using the \shortTable constraint, the number of fails drastically increases and, in most instances, the instance takes more time to solve.
+This is most likely due to the lack of \bp component to help guide the search towards a solution for the \shortTable constraint.
+
 
 \subsection{Structural Experiments}
 The results to our structural experiments can be seen in Table~\ref{tab:structural-results}.
@@ -830,6 +839,32 @@ However, these are clearly offset by the superior search guidance, and thus, muc
     \end{tabular}
     \caption[Comparing branching heuristics on some structurally-constrained molecule generation instances.]{Comparing branching heuristics on some structurally-constrained molecule generation instances. Instances marked with a blank line indicate a timed out instance. The number of fails indicates how many dead ends the solver ran into and had to backtrack to get out of. Since \texttt{domWdeg/random} incorporates randomness, we run 11 instances and report the median.}
     \label{tab:structural-results}
+\end{table}
+
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lrr}
+        \hline
+        & \multicolumn{2}{c}{\texttt{maxMarginalStrength/LDS}}\\
+        instance & time(s) & fails \\
+        \hline
+        [175,225] [-4,-3]  & 541.8 & 266\cr
+        [175,225] [-2,-1]  & 388.5 &  36\cr
+        [175,225] [1,2]    &  45.4 &   1\cr
+        [275,325] [-4,-3]  & 611.7 & 225\cr
+        [275,325] [-2,-1]  & 518.0 &  41\cr 
+        [275,325] [1,2]    &  52.0 &   1\cr 
+        [375,425] [-4,-3]  &    -- &  --\cr 
+        [375,425] [-2,-1]  & 385.1 &  85\cr 
+        [375,425] [1,2]    &  61.1 &  18\cr 
+        \hline
+    \end{tabular}
+    \caption[Runs using the \shortTable constraint without \bp as a comparison to the results from Table~\ref{tab:property-results}.]{Runs using the \shortTable constraint without \bp as a comparison to the results from Table~\ref{tab:property-results}.
+    We do not test the performance of \shortTable with \bp as it guides the search towards undesirable results.    
+    We only report on \texttt{maxMarginalStrength/LDS} as it had the best results.
+    Using the \shortTable constraint appears to have significantly worse results, most likely due to the lack of \bp to guide the search towards a valid solution.}
+    \label{tab:short-table-results}
 \end{table}
 
 

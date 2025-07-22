@@ -38,7 +38,7 @@ The decoder is also made up of multiple identical layers, each composed of three
 The masked multi-headed attention layer's output is then fed into the next multi-headed attention layer with the encoded input from the encoder. This is finally passed through a feed-forward network.
 The input received by the masked multi-headed attention is an embedding which encodes both the current output sequence as well as positional information on the tokens.
 
-Once this final output is calculated, we apply a softmax on it to get the probabilities for the next token.  
+Once this final output is calculated, we apply a softmax on it to get the probabilities for the next token. This is a type of sequential generation model, capable of generating a sequence token-by-token by sampling over the given probability.
 
 
 %%% SubSection LLM %%%

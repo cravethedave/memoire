@@ -10,7 +10,7 @@ This chapter details how we combine our previous \cp with a chosen \gls{llm} to 
 
 The first section will present the combined architecture before going in depth on each part. We will then go over the experiments we did and their results in the next two sections.
 
-The work in this chapter was published as part of a joint article presented at IJCAI25~\cite{ijcai:saikali}.
+The work in this chapter was published as part of a joint article presented at IJCAI'25~\cite{ijcai:saikali}.
 
 \section{Architecture}
 To combine the two models, we use a combination at inference time (\ie during generation). Our \gls{cpbp} model takes the \gls{llm}'s prediction probabilities over the next token as an input and updates them using \bp. The combined model then samples the next token from this new distribution and sends this new string as an input to the \gls{llm}.

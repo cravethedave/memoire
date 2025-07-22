@@ -70,29 +70,44 @@ In the context of their work on constrained graph generation using \cp, Omrani a
 So despite some prior work involving \cp, none address the problem we consider and especially the use of the \grammar constraint.
 
 
-\subsection{Combining \acrshort{cp} with \acrshort{ml}}
+\section{Combining \acrshort{cp} with \acrshort{ml}}
 \label{sec:lit-review/gpt+cp}
 Combining \cp with \gls{ml} has been a subject of interest for a while.
-Specifically in the field of Reinforcement Learning, where constraints can be directly injected into the reward signal.
+Specifically in the field of Reinforcement Learning, where constraints can be directly injected into the reward signal~\cite{DBLP:conf/cp/LafleurCP22,DBLP:conf/cpaior/YinCP24}.
 This would train the model to respect the constraints, though still gives no guarantee that it will be respected.
 Resulting sequences are more likely to avoid undesirable traits while still reflecting the training data and achieving good sample diversity.
-
-By expressing arbitrary constraint in the \cpbp framework and automatically deriving a reward signal, both Lafleur et al.~\cite{DBLP:conf/cp/LafleurCP22} and Yin et al.~\cite{DBLP:conf/cpaior/YinCP24} manage to improve this.
-
-In a \cp-driven generation, \cite{DBLP:conf/cp/ReginMB24} builds a \csp incrementally by adding sequence variables on the fly and limiting their domain to an LLM's short list of candidate tokens, queried at each step.
-
-Deutsch et al.~\cite{deutsch2019general} express commonly-used constraints in \gls{nlp} as automata. At each step, the automata filter out the inconsistent token values and renormalize the \nn's output probability distribution accordingly.
-
-Our method is closest in spirit to this last source as we also modify the output probability distribution by removing inconsistent values. However, more importantly, we potentially change these probabilities relative to each other to reflect the marginal probabilities computed from the constraints of our \cp model.
-
-Using CP also offers a variety of constraints, including automata~\cite{DBLP:conf/cp/Pesant04}, and inconsistent values are removed at each step through constraint propagation instead of checking the full completion of the partial sequence with the automata.
 
 However, the field that is of more interest to us is the addition of a constraint module post-training to a \nn, as this resembles our method more.
 
 Lattner et al.~\cite{lattner2018imposing} use a convolutional restricted Boltzmann machine as a generative model and enforce constraints as differentiable cost functions that are minimized during the sampling process to resemble the structure of a reference musical piece.
+By representing constraints as differentiable cost functions, they show that they can integrate the constraints to the musical generation while maintaining the learned local musical coherence of the original model.
 
-Lee et al.~\cite{lee2019gradient} use gradient-based inference to continue adjusting the model's parameters toward the satisfaction of the constraints during inference.
+Lee et al.~\cite{lee2019gradient} use gradient-based inference to adjust the model's parameters toward the satisfaction of the constraints during inference.
+They show that by modifying the feed-forward of their model, they can give weight to constraints.
+This modifies the model's inner workings and guides the generation towards valid sequences as they demonstrate in their work.
 
-Paolo et al.~\cite{DBLP:conf/nesy/DragoneTP21} introduce a \emph{constrained structured predictor} expressed in a \cp language that acts as a final layer to a \nn and which is trainable to finetune the predictions but also enforces the constraints during inference.
+While these past methods did integrate constraints into their \gls{ml} model at inference time, they are not using \cp and use different representations.
+These next methods combine the two using a \csp as we intend to do.
+
+Paolo et al.~\cite{DBLP:conf/nesy/DragoneTP21} introduce a \emph{constrained structured predictor} expressed in a \cp language that acts as a final layer to a \nn.
+The total model can be trained to finetune the predictions while enforcing soft and hard constraints during inference.
+They then compare their hybrid architecture, {\sc Nester} to both separate models and find that achieves better results.
+While this work uses \cp to refine a \gls{ml} model, it acts on the output of the latter model.
+Note, this model is not used to generate, it was used to predict handwriting.
+
+In a \cp-driven generation, as we intend to do, \cite{DBLP:conf/cp/ReginMB24} builds a \csp incrementally by adding sequence variables on the fly and limiting their domain to an LLM's short list of candidate tokens, queried at each step.
+Similarly to what we wish to do in our work, they query a \gls{llm} model at each step of the sequence generation and use the most probable returned values to determine the potential values for the next token.
+The main difference between us and this work is that we will modify the probabilities of the next token returned by the \gls{llm} by using \bp.
+
+While these are closer to our work, we plan to use \cp as a way to modify the message of the \gls{ml} model as we generate the sequence token-by-token.
+
+Deutsch et al.~\cite{deutsch2019general} do something extremely similar. By expressing commonly-used constraints in \gls{nlp} as automata, they filter out inconsistent token values and renormalize the \nn's output probability distribution accordingly at each step of the generation.
+This approach allows them to apply constraint at inference time to guarantee the respect of given constraints.
+Our method is closest in spirit to this as we also modify the output probability distribution by removing inconsistent values at inference time.
+However, more importantly, we potentially change these probabilities relative to each other to reflect the marginal probabilities computed from the constraints of our \cp model.
+Guiding the model towards valid solutions while maintaining the \gls{ml} model's message.
+It remains to be seen how well this works.
+
+Using CP also offers a variety of constraints, including automata~\cite{DBLP:conf/cp/Pesant04}, allowing inconsistent values to be removed at each step through constraint propagation instead of checking the full completion of the partial sequence with the automata.
 
 \end{document}

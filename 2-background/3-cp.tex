@@ -18,7 +18,7 @@ which is an improvement over standard constraint propagation and leads to more i
 \subsubsection{All Different Constraint}
 The \alldifferent constraint takes a single parameter:
 \begin{itemize}
-    \item $X$: a subset of variables.
+    \item $X$: a set of variables.
 \end{itemize}
 
 It does exactly as its name implies and ensures that the variables within its scope are each assigned a different value.
@@ -30,23 +30,22 @@ $$
 \subsubsection{Among Constraint}
 The \among constraint takes three parameters: 
 \begin{itemize}
-    \item $X$: a subset of variables,
+    \item $X$: a set of variables,
     \item $V$: a set of values whose occurrences we count in the variables $X$,
-    \item $o$: a set of allowed occurrences. This can be a simple integer when only a single value is allowed.
+    \item $o$: a set of variables indicating the allowed occurrences of the corresponding value in $V$.
 \end{itemize}
 
-It ensures the values in $V$ appear as many times as one of the values in $o$.
-For the sake of our example, we define $o$ as a set containing 3 values: $o_1, o_2, o_3$.
+It ensures the values in $V$ appear in $X$ as many times as indicated by the corresponding occurrence variable in $o$.
 
 $$
-    \among(\langle X_1, X_2, \ldots, X_n \rangle, \{V_1, V_2, \ldots, V_m\}, \{o_1, o_2, o_3\})
+    \among(\langle X_1, X_2, \ldots, X_n \rangle, \{V_1, V_2, \ldots, V_m\}, \{o_1, o_2, \ldots, o_m\})
 $$
 
 \subsubsection{Element Constraint}
 The \element constraint takes three parameters:
 \begin{itemize}
     \item $V$: an array of size $m$,
-    \item $X$: a variable whose domain has $m$ as an upper bound,
+    \item $X$: a variable whose domain represents indices to array $V$,
     \item $Y$: a variable which will be constrained to take a value from $V$.
 \end{itemize}
 
@@ -56,31 +55,18 @@ $$
     \element([V_1, V_2, \ldots, V_i, \ldots, V_m], X, Y)
 $$
 
-\subsubsection{Grammar Constraint}
-The \grammar constraint takes two parameters:
-\begin{itemize}
-    \item $X$: a subset of variables,
-    \item $g$: a \acrfull{cfg}.
-\end{itemize}
-
-It ensures that the values assigned to the variables represent a word from the given grammar's recognized language.
-
-This constraint is critical to our work as it allows us to represent our molecule encoding as a \gls{cfg}, guaranteeing that generated sequences are a word in the recognized language.
-
-$$
-    \grammar(\langle X_1, X_2, \ldots, X_n \rangle, g)
-$$
-
 \subsubsection{Regular Constraint}
-The \regular constraint usually takes four parameters:
+The \regular constraint gets its name from the regular languages that it models in \cp. It usually takes four parameters:
 \begin{itemize}
-    \item $X$: a subset of variables,
+    \item $X$: a set of variables whose domains are the alphabet of the automata,
     \item $\mathcal{A}$: a transition matrix mapping each state to the next appropriate state given an input value. For a given state, $s$, and value $v$, the next state, $s'$, is determined as follows: $A[s][v] = s'$,
     \item $S$: an initial state,
     \item $f$: a list of final states. This parameter can be omitted in the case where all states are valid accepting states, which is the case in the \regular constraints used in our work.
 \end{itemize}
 
-Starting at the initial state, we use the value of the next variable (\ie the first one) in the sequence to map towards the next state. The constraint is respected if our last variable leads to an accepting state.
+Starting at the initial state, we use the value of the next variable (\ie the first one) in the sequence to map towards the next state.
+The constraint is respected if our last variable leads to an accepting state.
+In other words, a solution to this constraint will always be an accepted word from the regular language of the automata.
 
 $$
     \regular(\langle X_1, X_2, \ldots, X_n \rangle, \mathcal{A}, S, [s_1, s_3, \ldots])
@@ -102,10 +88,25 @@ We represent the domain of the $t$ variable underneath the \costregular constrai
     &t^- \leq t \leq t^+
 \end{align*}
 
+\subsubsection{Grammar Constraint}
+The \grammar constraint takes two parameters:
+\begin{itemize}
+    \item $X$: a set of variables,
+    \item $g$: a \acrfull{cfg}.
+\end{itemize}
+
+It ensures that the values assigned to the variables represent a word from the given grammar's recognized language.
+
+This constraint is critical to our work as it allows us to represent our molecule encoding as a \gls{cfg}, guaranteeing that generated sequences are a word in the recognized language.
+
+$$
+    \grammar(\langle X_1, X_2, \ldots, X_n \rangle, g)
+$$
+
 \subsubsection{Sum Constraint}
 The \somme constraint takes two parameters:
 \begin{itemize}
-    \item $X$: a subset of variables,
+    \item $X$: a set of variables,
     \item $Y$: a variable that represents the sum of the values of variables $X$.
 \end{itemize}
 
@@ -120,7 +121,7 @@ We represent the domain of the $Y$ variable underneath the \somme constraint. Fo
 \subsubsection{Table Constraint}
 The \extensional constraint takes two parameters:
 \begin{itemize}
-    \item $X$: a subset of variables,
+    \item $X$: a set of variables,
     \item $\mathcal{T}$: a table of recognized tuples.
 \end{itemize}
 
@@ -199,7 +200,7 @@ Both variables initially contained a value that would always breach the constrai
 \end{figure} 
 
 %%% SubSection Constraint Propagation %%%
-\subsection{Constraint Propagation}
+\subsection{Constraint Propagation and Backtrack Search}
 Now that we have declared our constraints, the solver begins propagating the consequences of these constraints. Each constraint in the queue communicates to the variables it affects which values in the domain have to be filtered out. Once a variable's domain has been changed, it notifies the constraints that are affected by the change and those constraints are then added to the queue again.
 
 The solver continues propagating the consequences of the constraints and updating domains until it reaches one of three situations: 

@@ -11,20 +11,20 @@
 \addcontentsline{toc}{compteur}{RÉSUMÉ}
 
 \begin{otherlanguage}{french}
-La recherche de molécules médicales est une tâche couteuse en terme de temps et de ressources.
-Considérant que la majorité des molécules possibles ne sont pas désirables, l'utilisation de mécanisme automatisé tel que le \textit{\acrshort{ml}} gagne en popularité pour filtrer les candidats ou pour trouver des molécules ayant des propriétés particulières.
-Par contre, ces processus manque souvent de structure à long terme et n'ont pas de guarantie de respecter les règles qu'on essaye de leur faire apprendre.
+La recherche de molécules médicales est une tâche coûteuse en terme de temps et de ressources.
+Considérant que la majorité des molécules possibles ne sont pas désirables, l'utilisation d'un mécanisme automatisé tel que l'apprentissage automatique gagne en popularité pour filtrer les candidats ou pour trouver des molécules ayant des propriétés particulières.
+Par contre, de tels mécanismes ne garantissent pas de respecter les propriétés qu'on essaie de leur faire apprendre.
 
-\acrshort{smiles} est une représentation uni-dimensionelle couramment utilisée dans le domaine de la chimie ainsi qu'en \textit{\acrshort{ml}}. 
+\acrshort{smiles} est une représentation uni-dimensionelle couramment utilisée dans le domaine de la chimie ainsi qu'en apprentissage automatique. 
 
-Dans notre recherche, on propose un modèle de programmation par contraintes qui permet de représenter les molécules organiques en utilisant la représentation \acrshort{smiles}. Ce modèle met de l'avant la contrainte \textit{grammar} comme principale composante pour la représentation valide de molécules.
+Dans notre recherche, nous proposons un modèle de programmation par contraintes qui permet de représenter les molécules organiques en utilisant la représentation \acrshort{smiles}. Ce modèle met de l'avant la contrainte \textit{grammar} comme principale composante pour la représentation valide de molécules.
 
-On démontre comment certaines propriétés chimique, comme le poids moléculaire et la lipophilicitée, peuvent être représentées en programmation par contraintes dans notre modèle.
+On démontre comment certaines propriétés chimiques, comme le poids moléculaire et la lipophilicitée, peuvent être représentées en programmation par contraintes dans notre modèle.
 
-On répond aussi au manque de structure à long terme dans les modèles de \textit{\acrshort{ml}} en introduisant notre modèle neurosymbolique \acrshort{geai-blanc}.
-Les probabilités qu'apprend le modèle de \textit{\acrshort{ml}} sont mélangées avec les probabilitées marginales calculées à partir de notre modèle de programmation par contraintes augmentée avec de la \acrshort{bp} lors de la génération de séquence.
-Le prochain jeton que l'on génère est choisi à partir de la distribution de probabilitées obtenue à partir du modèle.
-Nos expérimentations sur ce modèle hybride montre qu'on réussi à respecter la struncture imposée après l'entrainement du modèle sans trop s'éloigner de la structure apprise lors de l'apprentissage.
+On répond aussi au manque de garanties dans les modèles d'apprentissage automatique en utilisant notre modèle neurosymbolique \acrshort{geai-blanc}.
+Les probabilités qu'apprend le modèle d'apprentissage automatique sont mélangées avec les probabilitées marginales calculées à partir de notre modèle de programmation par contraintes augmentée avec de la \acrshort{bp} lors de la génération de séquence.
+Le prochain jeton que l'on génère est choisi à partir de la distribution de probabilités obtenue à partir du modèle.
+Nos expérimentations sur ce modèle hybride montrent qu'on réussit à respecter la struncture imposée après l'entrainement du modèle sans trop s'éloigner de la structure apprise lors de l'apprentissage.
 
 \end{otherlanguage}
 

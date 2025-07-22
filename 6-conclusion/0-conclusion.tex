@@ -7,9 +7,9 @@
 \Chapter{CONCLUSION}
 \label{chap:conclusion}
 This chapter will conclude our work.
-We will first go over the work we did, summarizing our main findings and their impact in regard to the research questions stated at the start of the paper.
+We will first go over the work we did, summarizing our main findings and their impact in regard to the research questions stated at the start of this thesis.
 Then we will highlight the limitations of our work and how it might have affected our results.
-Finally, we will discuss future work that could be of interest to us our future researchers wishing to pursue this topic further.
+Finally, we will discuss future work that could be of interest to future researchers wishing to pursue this topic further.
 
 %%
 %%  SYNTHESE DES TRAVAUX / SUMMARY OF WORKS
@@ -18,15 +18,15 @@ Finally, we will discuss future work that could be of interest to us our future 
 \label{sec:conc/summary}
 We defined a model capable of modelling valid molecules using a commonly used one-dimensional representation: \smiles.
 
-We first test this model using additional structural constraints and three heuristics:\\ \texttt{domWdeg/Random}, \texttt{maxMarginalStrength/DFS}, and \texttt{maxMarginalStrength/LDS}.
+We first tested this model using additional structural constraints and three heuristics:\\ \texttt{domWdeg/Random}, \texttt{maxMarginalStrength/DFS}, and \texttt{maxMarginalStrength/LDS}.
 On every instance, our model manages to find at least one solution across the three heuristics, confirming that our representation can generate valid molecules in \smiles format.
 
-We then model desirable molecular properties using \cp and apply the constraints to our model, without the structural constraints.
+We then modelled desirable molecular properties using \cp and applied the constraints to our model, without the structural constraints.
 This model is capable of generating valid molecules while targeting specific properties.
 These property constraints are estimations with acceptable error rates.
 Once again, the model is tested using the same three heuristics and every instance is resolved at least once.
 
-The results of these two test series allow us to compare the advantages of the different heuristics. \bp guides the search towards valid solutions significantly faster, however the added cost in time can cause it to solve the instance in more time than standard \cp.
+The results of these two test series allow us to compare the advantages of the different heuristics. \bp guides the search towards valid solutions significantly better, however the added cost in time can cause it to solve the instance in more time than standard \cp.
 We believe that some of our constraints, namely the \grammar constraint, are quite large and the additional cost to compute the marginals needed for \bp slow down the solving. We will discuss this more later, in both our limitations and future work.
 
 Finally, we combined a simple \cp model with a \gls{llm}.
@@ -62,7 +62,7 @@ Designing a light grammar that still manages to do everything we wanted proved t
 Our current grammar is too restrictive and certain valid \smiles chains are unrecognized. 
 This was a known issue stated in the original work~\cite{kraev2018grammars}. 
 Initially, we assumed that, while the grammar did not recognize certain \smiles strings, it would be able to recognize the molecule under a different \smiles representation (since the same molecule can have multiple representations).
-However, during one of our tests, we attempted to do tests on a known molecule family (benzenoids) and found no recognizable \smiles representation that our grammar accepted.
+However, during one of our tests, we attempted to do tests on a known molecule family (Benzodiazepines) and found no recognizable \smiles representation that our grammar accepted.
 This seems to be due to two cycles sharing an edge with each other as the model would fail when attempting to place a cycle token after the end of one of the branches required to represent the molecule (as seen in red below).
 
 {
@@ -92,9 +92,8 @@ While this is likely accurate (the \shortTable constraint would push for an earl
 
 \paragraph{Backtracking in the Combined Model.}
 A big limitation of our combined model is its inability to backtrack.
-The main reason we didn't implement this is that the combined model research was done for our joint paper in IJCAI25\cite{ijcai:saikali}.
+The main reason we didn't implement this is that the combined model research was done for our joint article in IJCAI'25\cite{ijcai:saikali}.
 The other half of the experiments were done on a model like the one we present and changing it to allow for backtracking would have been a large shift.
-However, this could be possible if we redefine the \oracle constraint (creating a new one would be a better decision).
 This fell outside the scope of our work, but would have been an interesting final iteration to compare to the others.
 
 
@@ -116,7 +115,7 @@ While our research successfully accomplishes the goals we had set, had we had mo
 One limitation imposed on us by the type of model we chose is lexicographic generation (\ie from left to right).
 \cp is capable, and can benefit from, generating a sequence out of order.
 We did look into doing something similar using models that can complete sequences given a ``mask'' token, however our tests did not continue far and we settled on a token-by-token generation model.
-This was primarily due to a lack of time and to follow suit with the other experiments in our joint IJCAI25 paper.
+This was primarily due to a lack of time and to follow suit with the other experiments in our joint IJCAI'25 article.
 
 
 \paragraph{Our \cp Model vs N-Grams.}
@@ -142,14 +141,6 @@ While the algorithm already tries to keep the resulting grammar's size to a mini
 Second, the more direct solution would be to change the grammar.
 By rewriting the grammar, we could design one that is smaller.
 This could also be a good opportunity to make the grammar more permissive, allowing it to recognize all \smiles strings while keeping it restrictive enough to not allow invalid \smiles strings.
-
-
-\paragraph{Fixing the \bp for the ShortTable Constraint}
-While this is not technically a part of our research, our research did reveal an issue worth investigating.
-Finding a solution to this would allow further experimentation using our research to determine which method (between the \shortTable constraints and the \costregular constraint) is better.
-The \shortTable method requires multiple constraints, one on each sequence of four tokens.
-On the other hand, the \costregular requires a single constraints to achieve the same effect.
-In our work, we could not truly compare the two to determine which works best.
 
 
 \paragraph{Evaluate Generated Molecules using Known Metrics.}
